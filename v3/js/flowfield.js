@@ -193,12 +193,8 @@
   function animate() {
     if (paused) { animId = requestAnimationFrame(animate); return; }
 
-    const bg = getBgColor();
-    const isDark = bg !== '#FFFFFF';
-    const r = isDark ? 11 : 255;
-    const g = isDark ? 13 : 255;
-    const b = isDark ? 18 : 255;
-    ctx.fillStyle = 'rgba(' + r + ',' + g + ',' + b + ',' + getTrailAlpha() + ')';
+    ctx.clearRect(0, 0, W, H);
+    ctx.fillStyle = getBgColor();
     ctx.fillRect(0, 0, W, H);
 
     time++;
