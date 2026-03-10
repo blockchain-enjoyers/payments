@@ -1,0 +1,212 @@
+/* ═══════════════════════════════════════════
+   OmniFlow Layout
+   Mobile-first. Breakpoints: 768px, 1280px
+   ═══════════════════════════════════════════ */
+
+/* ── Reset ── */
+*, *::before, *::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: auto; /* Lenis handles smooth scroll */
+}
+
+body {
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.5;
+  color: var(--color-text-primary);
+  background: var(--color-bg-primary);
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ── Container ── */
+.container {
+  width: 100%;
+  max-width: var(--container-max);
+  margin: 0 auto;
+  padding: 0 var(--space-4);
+}
+
+@media (min-width: 768px) {
+  .container {
+    padding: 0 var(--space-8);
+  }
+}
+
+@media (min-width: 1280px) {
+  .container {
+    padding: 0 var(--space-12);
+  }
+}
+
+/* ── Section base ── */
+.section {
+  position: relative;
+  z-index: 1;
+  background: var(--color-bg-primary);
+  padding: var(--space-20) 0;
+  overflow: hidden;
+}
+
+.section--alt {
+  background: var(--color-bg-secondary);
+}
+
+/* ── Section label (eyebrow text) ── */
+.section__label {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--color-primary);
+  margin-bottom: var(--space-4);
+}
+
+/* ── Section headline ── */
+.section__headline {
+  font-family: var(--font-display);
+  font-size: clamp(1.5rem, 4vw, 2.5rem);
+  font-weight: 700;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  color: var(--color-text-primary);
+  margin-bottom: var(--space-4);
+}
+
+/* ── Section subtitle ── */
+.section__subtitle {
+  font-size: clamp(0.95rem, 2vw, 1.125rem);
+  font-weight: 400;
+  line-height: 1.6;
+  color: var(--color-text-secondary);
+  max-width: 640px;
+  margin-bottom: var(--space-12);
+}
+
+/* ── Grid utilities ── */
+.grid-2 {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-6);
+}
+
+.grid-3 {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-6);
+}
+
+.grid-4 {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-6);
+}
+
+@media (min-width: 768px) {
+  .grid-2 { grid-template-columns: repeat(2, 1fr); }
+  .grid-3 { grid-template-columns: repeat(2, 1fr); }
+  .grid-4 { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (min-width: 1280px) {
+  .grid-3 { grid-template-columns: repeat(3, 1fr); }
+  .grid-4 { grid-template-columns: repeat(4, 1fr); }
+}
+
+/* ── Typography ── */
+a {
+  color: var(--color-primary);
+  text-decoration: none;
+  transition: opacity var(--duration-hover) var(--ease-default);
+}
+
+a:hover { opacity: 0.8; }
+
+/* ── Button base ── */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display);
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  border-radius: var(--radius-pill);
+  transition: transform var(--duration-hover) var(--ease-default),
+              box-shadow var(--duration-hover) var(--ease-default);
+  min-height: 44px;
+  min-width: 44px;
+}
+
+.btn:hover {
+  transform: translateY(-2px);
+}
+
+.btn--primary {
+  font-size: 1rem;
+  color: #fff;
+  background: var(--color-gradient);
+  padding: 0.85rem 2rem;
+}
+
+.btn--primary:hover {
+  box-shadow: 0 12px 32px rgba(24, 148, 232, 0.35);
+}
+
+.btn--ghost {
+  font-size: 1rem;
+  font-weight: 500;
+  color: var(--color-text-primary);
+  background: transparent;
+  border: 1px solid var(--color-border);
+  padding: 0.85rem 2rem;
+}
+
+.btn--ghost:hover {
+  background: var(--color-glass);
+}
+
+.btn--nav {
+  font-size: 0.875rem;
+  color: #fff;
+  background: var(--color-gradient);
+  padding: 0.5rem 1.25rem;
+}
+
+.btn--nav:hover {
+  box-shadow: 0 8px 24px rgba(24, 148, 232, 0.3);
+}
+
+/* ── Card base ── */
+.card {
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card-lg);
+  padding: var(--space-8);
+  transition: background var(--duration-hover) var(--ease-default),
+              border-color var(--duration-hover) var(--ease-default);
+}
+
+.card:hover {
+  background: var(--color-bg-elevated);
+}
+
+/* ── Visually hidden (a11y) ── */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}

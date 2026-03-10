@@ -1,0 +1,738 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OmniFlow — Cross-Chain Payment Rails for Crypto Teams</title>
+  <meta name="description" content="Batch payouts, invoicing, recurring payments — one engine, any chain, any token. Gasless and non-custodial.">
+
+  <!-- OG / Twitter -->
+  <meta property="og:title" content="OmniFlow — Cross-Chain Payment Rails for Crypto Teams">
+  <meta property="og:description" content="Batch payouts, invoicing, recurring payments — one engine, any chain, any token.">
+  <meta property="og:type" content="website">
+  <meta property="og:image" content="assets/og-card.png">
+  <meta property="og:url" content="https://omniflow.dev">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:site" content="@omniflow_dev">
+
+  <!-- Fonts: preconnect + load -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+
+  <!-- CSS -->
+  <link rel="stylesheet" href="css/tokens.css">
+  <link rel="stylesheet" href="css/layout.css">
+  <link rel="stylesheet" href="css/sections.css">
+  <link rel="stylesheet" href="css/effects.css">
+</head>
+<body>
+
+  <!-- #0 Nav -->
+  <nav class="nav glass" id="nav" aria-label="Main navigation">
+    <a href="/" class="nav__logo">OmniFlow</a>
+
+    <ul class="nav__links">
+      <li><a href="#how-it-works" class="nav__link">How It Works</a></li>
+      <li><a href="#use-cases" class="nav__link">Use Cases</a></li>
+      <li><a href="#pricing" class="nav__link">Pricing</a></li>
+      <li><a href="https://docs.omniflow.dev" class="nav__link" target="_blank" rel="noopener">Docs</a></li>
+    </ul>
+
+    <div class="nav__actions">
+      <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">
+        <svg class="theme-toggle__icon--dark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="5"/>
+          <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+        </svg>
+        <svg class="theme-toggle__icon--light" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>
+        </svg>
+      </button>
+      <a href="/app/" class="btn btn--nav">Launch App</a>
+      <button class="nav__hamburger" id="navHamburger" aria-label="Toggle menu" aria-expanded="false">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- Mobile menu -->
+  <div class="nav__mobile-menu" id="mobileMenu">
+    <a href="#how-it-works">How It Works</a>
+    <a href="#use-cases">Use Cases</a>
+    <a href="#pricing">Pricing</a>
+    <a href="https://docs.omniflow.dev" target="_blank" rel="noopener">Docs</a>
+    <a href="/app/" class="btn btn--primary">Launch App</a>
+  </div>
+
+  <!-- Flow field canvas (hero background) -->
+  <canvas class="flow-canvas hero--flow-fallback" id="flowCanvas" aria-hidden="true"></canvas>
+
+  <!-- #1 Hero -->
+  <section class="hero" id="hero">
+    <div class="hero__inner">
+      <div class="badge hero__badge">
+        <span>&#127942;</span>
+        1st Place — ETHGlobal HackMoney 2026
+      </div>
+
+      <h1 class="hero__headline">
+        Cross-Chain Payment Rails<br>for Crypto Teams
+      </h1>
+
+      <p class="hero__subtitle">
+        Batch payouts. Invoicing. Recurring payments. One engine, any chain,
+        any token — gasless and non-custodial.
+      </p>
+
+      <div class="hero__stats">
+        <span class="hero__stat-value">30+ Chains</span>
+        <span class="hero__stat-divider"></span>
+        <span class="hero__stat-value">Any Token</span>
+        <span class="hero__stat-divider"></span>
+        <span class="hero__stat-value">$0 Gas</span>
+        <span class="hero__stat-divider"></span>
+        <span class="hero__stat-value">Non-Custodial</span>
+      </div>
+
+      <div class="hero__buttons">
+        <a href="/app/" class="btn btn--primary">Launch App</a>
+        <a href="#batch-demo" class="btn btn--ghost">Watch Demo</a>
+      </div>
+
+      <div class="hero__video">
+        30s demo video placeholder
+      </div>
+    </div>
+  </section>
+
+  <main>
+    <!-- #2 Problem -->
+    <section class="section bg-mesh bg-mesh--problem" id="problem">
+      <div class="container">
+        <span class="section__label">The Problem</span>
+        <h2 class="section__headline">Cross-chain payments don't work</h2>
+        <p class="section__subtitle">Whether it's payroll, invoices, or treasury ops — teams waste hours on manual execution across chains.</p>
+        <div class="problem__cards grid-2" data-animate="stagger">
+          <div class="card problem__card">
+            <span class="problem__card-stat" data-counter="2" data-counter-suffix="+ hours">0</span>
+            <h3 class="problem__card-title">Per payout cycle</h3>
+            <p class="problem__card-text">50 transactions across 3 chains. Each one manual. Each one a risk.</p>
+          </div>
+          <div class="card problem__card">
+            <span class="problem__card-stat">5-15%</span>
+            <h3 class="problem__card-title">Error rate</h3>
+            <p class="problem__card-text">Wrong address, wrong chain, wrong amount. No undo in crypto.</p>
+          </div>
+          <div class="card problem__card">
+            <span class="problem__card-stat">$120K</span>
+            <h3 class="problem__card-title">Lost by PeopleDAO</h3>
+            <p class="problem__card-text">Hacker edited their shared Google Sheets payroll. Compromised signer paid out.</p>
+          </div>
+          <div class="card problem__card">
+            <span class="problem__card-stat">3 tools</span>
+            <h3 class="problem__card-title">Shut down</h3>
+            <p class="problem__card-text">Parcel ($250M+ processed). Utopia ($48M raised). Llama pivoted. No replacement.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- #3 Solution -->
+    <section class="section" id="solution">
+      <div class="container">
+        <span class="section__label">The Solution</span>
+        <h2 class="section__headline">One engine for every payment</h2>
+        <p class="section__subtitle">Payouts, invoicing, recurring, rebalancing — all cross-chain, all gasless, all non-custodial.</p>
+        <div class="solution__wrap" id="solutionWrap">
+          <div class="solution__visual">
+            <div class="solution__before" id="solutionBefore">
+              <div class="solution__diagram">
+                <div class="solution__node solution__node--chain" style="--chain-color: var(--color-chain-eth)">ETH</div>
+                <div class="solution__node solution__node--chain" style="--chain-color: var(--color-chain-base)">Base</div>
+                <div class="solution__node solution__node--chain" style="--chain-color: var(--color-chain-arb)">ARB</div>
+                <div class="solution__arrows-before">
+                  <span>&rarr;</span><span>&rarr;</span><span>&rarr;</span>
+                  <span>&rarr;</span><span>&rarr;</span><span>&rarr;</span>
+                </div>
+                <div class="solution__manual">
+                  <span class="solution__clock">&#9200; 2 hours</span>
+                  <span class="solution__steps">50 manual txns</span>
+                </div>
+              </div>
+            </div>
+            <div class="solution__after" id="solutionAfter">
+              <div class="solution__diagram">
+                <div class="solution__node solution__node--omni">OmniFlow</div>
+                <div class="solution__arrows-after">
+                  <span>&rarr;</span>
+                </div>
+                <div class="solution__result">
+                  <span class="solution__fast">&#9889; 30 seconds</span>
+                  <span class="solution__steps">1 API call</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <p class="solution__stat" data-animate="fade-up">
+            <span class="solution__stat-highlight">50 payouts &times; 3 chains</span>
+            <span class="solution__stat-text">&rarr; 2 min instead of 2 hours</span>
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- #4 How It Works -->
+    <section class="section section--alt" id="how-it-works">
+      <div class="container">
+        <span class="section__label">How It Works</span>
+        <h2 class="section__headline">Three steps. Any chain.</h2>
+        <div class="steps" id="stepsWrap">
+          <div class="steps__progress">
+            <div class="steps__line">
+              <div class="steps__line-fill" id="stepsLineFill"></div>
+            </div>
+          </div>
+          <div class="steps__list">
+            <div class="steps__item" data-step="1">
+              <div class="steps__number">01</div>
+              <h3 class="steps__title">Upload</h3>
+              <p class="steps__text">CSV file or paste from spreadsheet — address, chain, token, amount.</p>
+              <div class="steps__timing">
+                <span class="steps__timing-label">Time:</span>
+                <span class="steps__timing-value">Instant</span>
+              </div>
+            </div>
+            <div class="steps__item" data-step="2">
+              <div class="steps__number">02</div>
+              <h3 class="steps__title">Review</h3>
+              <p class="steps__text">Preview recipients, routes, and fees. OmniFlow finds optimal paths via LI.FI + CCTP v2.</p>
+              <div class="steps__timing">
+                <span class="steps__timing-label">Time:</span>
+                <span class="steps__timing-value">5 sec</span>
+              </div>
+            </div>
+            <div class="steps__item" data-step="3">
+              <div class="steps__number">03</div>
+              <h3 class="steps__title">Execute</h3>
+              <p class="steps__text">One click. Account Abstraction batches everything. All recipients get paid.</p>
+              <div class="steps__timing">
+                <span class="steps__timing-label">Settlement:</span>
+                <span class="steps__timing-value">30 sec – 3 min</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- #5 Batch Demo -->
+    <section class="section" id="batch-demo">
+      <div class="container">
+        <span class="section__label">Batch Payouts</span>
+        <h2 class="section__headline">One API Call. Five Chains. $12,000 Sent.</h2>
+        <div class="batch" data-animate="fade-up">
+          <div class="batch__table-wrap">
+            <table class="batch__table" id="batchTable">
+              <thead>
+                <tr>
+                  <th>Recipient</th>
+                  <th>Chain</th>
+                  <th>Token</th>
+                  <th>Amount</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr data-row="1">
+                  <td><span class="batch__address">alice.eth</span></td>
+                  <td><span class="batch__chain" style="--chain-color: var(--color-chain-base)">Base</span></td>
+                  <td>USDC</td>
+                  <td class="batch__amount">$2,400</td>
+                  <td><span class="batch__status" data-status="pending">Pending</span></td>
+                </tr>
+                <tr data-row="2">
+                  <td><span class="batch__address">bob.eth</span></td>
+                  <td><span class="batch__chain" style="--chain-color: var(--color-chain-arb)">Arbitrum</span></td>
+                  <td>USDT</td>
+                  <td class="batch__amount">$3,100</td>
+                  <td><span class="batch__status" data-status="pending">Pending</span></td>
+                </tr>
+                <tr data-row="3">
+                  <td><span class="batch__address">carol.eth</span></td>
+                  <td><span class="batch__chain" style="--chain-color: var(--color-chain-eth)">Ethereum</span></td>
+                  <td>DAI</td>
+                  <td class="batch__amount">$1,800</td>
+                  <td><span class="batch__status" data-status="pending">Pending</span></td>
+                </tr>
+                <tr data-row="4">
+                  <td><span class="batch__address">dave.eth</span></td>
+                  <td><span class="batch__chain" style="--chain-color: var(--color-chain-op)">Optimism</span></td>
+                  <td>USDC</td>
+                  <td class="batch__amount">$2,700</td>
+                  <td><span class="batch__status" data-status="pending">Pending</span></td>
+                </tr>
+                <tr data-row="5">
+                  <td><span class="batch__address">eve.eth</span></td>
+                  <td><span class="batch__chain" style="--chain-color: var(--color-chain-sonic)">Sonic</span></td>
+                  <td>USDC</td>
+                  <td class="batch__amount">$2,000</td>
+                  <td><span class="batch__status" data-status="pending">Pending</span></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="batch__summary">
+            <span>5 recipients</span>
+            <span class="batch__dot">&middot;</span>
+            <span>5 chains</span>
+            <span class="batch__dot">&middot;</span>
+            <span>3 tokens</span>
+            <span class="batch__dot">&middot;</span>
+            <span>1 API call</span>
+          </div>
+          <div class="batch__footer">
+            <div class="batch__timer">
+              <span class="batch__timer-label">Batch time:</span>
+              <span class="batch__timer-value" id="batchTimer">0.0s</span>
+            </div>
+            <div class="batch__gas-saved">
+              <span class="batch__gas-badge">$0 gas fees</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- #6 Use Cases -->
+    <section class="section bg-mesh bg-mesh--usecases" id="use-cases">
+      <div class="container">
+        <span class="section__label">Who It's For</span>
+        <h2 class="section__headline">One engine. Every payment use case.</h2>
+        <div class="usecases__grid" data-animate="stagger">
+          <div class="card usecases__card" data-tilt>
+            <span class="usecases__icon">&#128188;</span>
+            <h3 class="usecases__title">Crypto Companies &amp; Funds</h3>
+            <p class="usecases__desc">Pay your remote team across chains</p>
+            <p class="usecases__flow">Upload CSV &rarr; batch payout &rarr; 50 recipients on 5 chains in one click</p>
+            <div class="usecases__meta">
+              <span class="usecases__module">Batch Payouts</span>
+              <span class="usecases__status usecases__status--live">Live</span>
+            </div>
+            <p class="usecases__stat">Deel's 40K companies pay in stablecoins. Cross-chain execution layer doesn't exist.</p>
+          </div>
+          <div class="card usecases__card" data-tilt>
+            <span class="usecases__icon">&#127963;</span>
+            <h3 class="usecases__title">DAOs &amp; Protocol Treasuries</h3>
+            <p class="usecases__desc">Rebalance treasury. Distribute grants.</p>
+            <p class="usecases__flow">Set allocation targets &rarr; automated rebalancing via session keys &rarr; zero daily interaction</p>
+            <div class="usecases__meta">
+              <span class="usecases__module">Rebalance + Batch</span>
+              <span class="usecases__status usecases__status--soon">Q4 2026</span>
+            </div>
+            <p class="usecases__stat">$4.4B Arbitrum + $5.5B Optimism treasuries need cross-chain ops</p>
+          </div>
+          <div class="card usecases__card" data-tilt>
+            <span class="usecases__icon">&#128221;</span>
+            <h3 class="usecases__title">Freelancers &amp; Vendors</h3>
+            <p class="usecases__desc">Get paid from any chain, in any token you want</p>
+            <p class="usecases__flow">Create invoice &rarr; share link &rarr; client pays from any chain &rarr; you receive USDC on Base</p>
+            <div class="usecases__meta">
+              <span class="usecases__module">Pay-in / Invoicing</span>
+              <span class="usecases__status usecases__status--soon">Q3 2026</span>
+            </div>
+            <p class="usecases__stat">90%+ crypto invoices are stablecoins. Cross-chain auto-conversion doesn't exist.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- #7 Modular Engine -->
+    <section class="section section--alt" id="engine">
+      <div class="container">
+        <span class="section__label">Architecture</span>
+        <h2 class="section__headline">One core engine. Infinite modules.</h2>
+        <p class="section__subtitle">Each capability is a module on the same execution layer. Adding a new protocol = adding a JSON manifest, not rewriting code.</p>
+        <div class="engine" data-animate="fade-up">
+          <div class="engine__core">
+            <div class="engine__core-label">Core Engine</div>
+            <div class="engine__core-techs">
+              <span>CCTP v2</span>
+              <span>LI.FI</span>
+              <span>ZeroDev</span>
+              <span>Pimlico</span>
+            </div>
+          </div>
+          <div class="engine__modules">
+            <div class="engine__module engine__module--live" data-animate="fade-up">
+              <span class="engine__module-name">Batch Payouts</span>
+              <span class="engine__module-badge engine__module-badge--live">Live</span>
+            </div>
+            <div class="engine__module" data-animate="fade-up">
+              <span class="engine__module-name">Pay-in / Invoicing</span>
+              <span class="engine__module-badge">Q3 2026</span>
+            </div>
+            <div class="engine__module" data-animate="fade-up">
+              <span class="engine__module-name">DeFi Protocols</span>
+              <span class="engine__module-badge">2027</span>
+            </div>
+            <div class="engine__module" data-animate="fade-up">
+              <span class="engine__module-name">AI Interface</span>
+              <span class="engine__module-badge">2027+</span>
+            </div>
+            <div class="engine__module" data-animate="fade-up">
+              <span class="engine__module-name">Open Standard</span>
+              <span class="engine__module-badge">2028+</span>
+            </div>
+          </div>
+        </div>
+        <p class="engine__tagline" data-animate="fade-up">We don't change the product. We add modules. Each module = new revenue stream on the same engine.</p>
+      </div>
+    </section>
+
+    <!-- #8 Features -->
+    <section class="section" id="features">
+      <div class="container">
+        <span class="section__label">Why OmniFlow</span>
+        <h2 class="section__headline">Five capabilities. Zero competitors combine all five.</h2>
+        <div class="features__grid" data-animate="stagger">
+          <div class="card features__card" data-tilt>
+            <span class="features__icon">&#127760;</span>
+            <h3 class="features__title">Cross-Chain (30+ chains)</h3>
+            <p class="features__text">CCTP v2 for USDC direct routing + LI.FI for everything else. Any EVM chain.</p>
+          </div>
+          <div class="card features__card" data-tilt>
+            <span class="features__icon">&#128230;</span>
+            <h3 class="features__title">Batch Operations</h3>
+            <p class="features__text">50 recipients, 5 chains, 1 API call. Upload CSV or use API.</p>
+          </div>
+          <div class="card features__card" data-tilt>
+            <span class="features__icon">&#9889;</span>
+            <h3 class="features__title">Gasless (Account Abstraction)</h3>
+            <p class="features__text">ZeroDev Kernel v3.3 + Pimlico paymaster. No native tokens needed. One passkey tap.</p>
+          </div>
+          <div class="card features__card" data-tilt>
+            <span class="features__icon">&#128260;</span>
+            <h3 class="features__title">Any Token &rarr; Any Token</h3>
+            <p class="features__text">LI.FI aggregates DEXes + bridges. Sender pays ETH, recipient gets USDC on another chain.</p>
+          </div>
+          <div class="card features__card" data-tilt>
+            <span class="features__icon">&#128274;</span>
+            <h3 class="features__title">Non-Custodial</h3>
+            <p class="features__text">Your keys, your funds. Session keys with spending limits + time expiry + contract whitelist.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- #9 Security -->
+    <section class="section bg-mesh bg-mesh--security" id="security">
+      <div class="container">
+        <span class="section__label">Security</span>
+        <h2 class="section__headline">Your keys. Your funds. Always.</h2>
+        <div class="security__grid grid-2" data-animate="stagger">
+          <div class="card security__card">
+            <h3 class="security__title">Non-custodial smart accounts</h3>
+            <p class="security__text">ZeroDev Kernel v3.3 (ERC-7579). You own the keys. We never touch your funds.</p>
+          </div>
+          <div class="card security__card">
+            <h3 class="security__title">Session keys</h3>
+            <p class="security__text">Time-limited permissions (30-day max). Spending caps per transaction and per day. Contract whitelist. Rate limits. Revocable instantly.</p>
+          </div>
+          <div class="card security__card">
+            <h3 class="security__title">No custom smart contracts</h3>
+            <p class="security__text">We integrate audited, battle-tested protocols: ZeroDev (6M+ accounts), Circle CCTP ($110B+ volume), LI.FI (production routing). Zero custom contract risk.</p>
+          </div>
+          <div class="card security__card">
+            <h3 class="security__title">No spreadsheet attack vector</h3>
+            <p class="security__text">PeopleDAO lost $120K when a hacker edited their shared Google Sheets payroll. OmniFlow eliminates this — recipients are verified on-chain, not in a spreadsheet.</p>
+          </div>
+        </div>
+        <div class="security__trust" data-animate="fade-up">
+          <span class="security__trust-label">Powered by audited infrastructure</span>
+          <div class="security__trust-logos">
+            <span class="security__trust-logo">LI.FI</span>
+            <span class="security__trust-logo">ZeroDev</span>
+            <span class="security__trust-logo">Circle CCTP</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- #10 Why Now -->
+    <section class="section section--alt" id="why-now">
+      <div class="container">
+        <span class="section__label">Timing</span>
+        <h2 class="section__headline">The window is open. Now.</h2>
+        <div class="whynow__grid grid-2" data-animate="stagger">
+          <div class="card whynow__card">
+            <span class="whynow__stat">60x</span>
+            <h3 class="whynow__title">Stablecoin B2B growth</h3>
+            <p class="whynow__text">From $100M/mo to $6B+/mo in 2 years. Deel processes $22B. Stripe added stablecoin accounts in 101 countries.</p>
+          </div>
+          <div class="card whynow__card">
+            <span class="whynow__stat">July 2026</span>
+            <h3 class="whynow__title">Regulatory clarity</h3>
+            <p class="whynow__text">GENIUS Act (US) + MiCA (EU) + Hong Kong stablecoin licenses. First time US+EU+Asia simultaneously enable institutional stablecoin payments.</p>
+          </div>
+          <div class="card whynow__card">
+            <span class="whynow__stat">3 tools</span>
+            <h3 class="whynow__title">Competitors exited</h3>
+            <p class="whynow__text">Parcel shut down ($250M+ processed). Utopia acqui-hired by Coinbase ($48M raised). Llama pivoted. No replacement exists.</p>
+          </div>
+          <div class="card whynow__card">
+            <span class="whynow__stat">25M+</span>
+            <h3 class="whynow__title">AA is production-ready</h3>
+            <p class="whynow__text">25-40M+ smart accounts. 99.2% of UserOps gas-sponsored. ZeroDev, Pimlico, Biconomy all production-grade.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- #11 Network Effects -->
+    <section class="section" id="vision">
+      <div class="container">
+        <span class="section__label">Vision</span>
+        <h2 class="section__headline">From tool to platform to standard.</h2>
+        <div class="vision__timeline" data-animate="fade-up">
+          <div class="vision__step">
+            <div class="vision__dot vision__dot--active"></div>
+            <div class="vision__content">
+              <span class="vision__year">Now</span>
+              <h3 class="vision__title">Tool</h3>
+              <p class="vision__text">Batch payouts for crypto teams. 10+ organizations.</p>
+            </div>
+          </div>
+          <div class="vision__step">
+            <div class="vision__dot"></div>
+            <div class="vision__content">
+              <span class="vision__year">2027</span>
+              <h3 class="vision__title">Platform</h3>
+              <p class="vision__text">Payouts + Invoicing + DeFi protocols. Protocol Manifest Standard. First 10-15 integrations written by us.</p>
+            </div>
+          </div>
+          <div class="vision__step">
+            <div class="vision__dot"></div>
+            <div class="vision__content">
+              <span class="vision__year">2028+</span>
+              <h3 class="vision__title">Ecosystem</h3>
+              <p class="vision__text">Open standard. Protocols self-integrate. More protocols &rarr; more users &rarr; more protocols want in.</p>
+            </div>
+          </div>
+        </div>
+        <div class="vision__flywheel" data-animate="fade-up">
+          <div class="vision__flywheel-item">
+            <span class="vision__flywheel-label">Data Effects</span>
+            <p>More transactions &rarr; better routing &rarr; lower costs</p>
+          </div>
+          <div class="vision__flywheel-item">
+            <span class="vision__flywheel-label">Cross-Side</span>
+            <p>More protocols &rarr; more users &rarr; more protocols</p>
+          </div>
+          <div class="vision__flywheel-item">
+            <span class="vision__flywheel-label">Payment Identity</span>
+            <p>Recipient paid by 5 orgs &rarr; verified history &rarr; switching cost</p>
+          </div>
+          <div class="vision__flywheel-item">
+            <span class="vision__flywheel-label">Standard Adoption</span>
+            <p>Protocol Manifest becomes integration standard &rarr; winner-take-most</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- #12 Pricing -->
+    <section class="section section--alt" id="pricing">
+      <div class="container">
+        <span class="section__label">Pricing</span>
+        <h2 class="section__headline">Start free. Scale when ready.</h2>
+        <div class="pricing__grid" data-animate="stagger">
+          <div class="card pricing__card">
+            <h3 class="pricing__plan">Free Trial</h3>
+            <div class="pricing__price"><span class="pricing__amount">$0</span><span class="pricing__period">14 days</span></div>
+            <ul class="pricing__features">
+              <li>10 recipients/batch</li>
+              <li>3 batches total</li>
+              <li>Single chain only</li>
+              <li>Dashboard access</li>
+            </ul>
+            <a href="/app/" class="btn btn--ghost pricing__cta">Start Free</a>
+          </div>
+          <div class="card pricing__card pricing__card--popular">
+            <span class="pricing__popular-badge">Most Popular</span>
+            <h3 class="pricing__plan">Growth</h3>
+            <div class="pricing__price"><span class="pricing__amount">$199</span><span class="pricing__period">/month</span></div>
+            <ul class="pricing__features">
+              <li>50 recipients/batch</li>
+              <li>Unlimited batches</li>
+              <li>Cross-chain (30+ chains)</li>
+              <li>CSV upload</li>
+              <li>$0.50 per extra recipient</li>
+            </ul>
+            <a href="/app/" class="btn btn--primary pricing__cta">Get Started</a>
+          </div>
+          <div class="card pricing__card">
+            <h3 class="pricing__plan">Pro</h3>
+            <div class="pricing__price"><span class="pricing__amount">$499</span><span class="pricing__period">/month</span></div>
+            <ul class="pricing__features">
+              <li>200 recipients/batch</li>
+              <li>Unlimited batches</li>
+              <li>Safe integration</li>
+              <li>API access</li>
+              <li>Approval workflows</li>
+              <li>$0.25 per extra recipient</li>
+            </ul>
+            <a href="/app/" class="btn btn--ghost pricing__cta">Contact Sales</a>
+          </div>
+          <div class="card pricing__card">
+            <h3 class="pricing__plan">Enterprise</h3>
+            <div class="pricing__price"><span class="pricing__amount">$1,500+</span><span class="pricing__period">/month</span></div>
+            <ul class="pricing__features">
+              <li>Unlimited recipients</li>
+              <li>Unlimited batches</li>
+              <li>Dedicated support</li>
+              <li>Custom integrations</li>
+              <li>SLA guarantee</li>
+              <li>Negotiable overage</li>
+            </ul>
+            <a href="/app/" class="btn btn--ghost pricing__cta">Contact Sales</a>
+          </div>
+        </div>
+        <p class="pricing__note" data-animate="fade-up">Gas fees sponsored for first transaction. LI.FI routing costs embedded in swap rate — no hidden fees.</p>
+      </div>
+    </section>
+
+    <!-- #13 Integrations -->
+    <section class="section" id="integrations">
+      <div class="container">
+        <span class="section__label">Built On</span>
+        <h2 class="section__headline">Built on audited, battle-tested infrastructure.</h2>
+        <div class="integrations__primary" data-animate="fade-up">
+          <div class="integrations__partner">
+            <span class="integrations__partner-name">LI.FI</span>
+            <span class="integrations__partner-role">Routing &amp; Bridging</span>
+          </div>
+          <div class="integrations__partner">
+            <span class="integrations__partner-name">ZeroDev</span>
+            <span class="integrations__partner-role">Smart Accounts</span>
+          </div>
+          <div class="integrations__partner">
+            <span class="integrations__partner-name">Circle CCTP v2</span>
+            <span class="integrations__partner-role">USDC Settlement</span>
+          </div>
+        </div>
+        <div class="integrations__marquee" aria-hidden="true">
+          <div class="integrations__marquee-track">
+            <span class="integrations__chain" style="--chain-color: var(--color-chain-eth)">Ethereum</span>
+            <span class="integrations__chain" style="--chain-color: var(--color-chain-base)">Base</span>
+            <span class="integrations__chain" style="--chain-color: var(--color-chain-arb)">Arbitrum</span>
+            <span class="integrations__chain" style="--chain-color: var(--color-chain-op)">Optimism</span>
+            <span class="integrations__chain" style="--chain-color: var(--color-chain-poly)">Polygon</span>
+            <span class="integrations__chain" style="--chain-color: var(--color-chain-avax)">Avalanche</span>
+            <span class="integrations__chain" style="--chain-color: var(--color-chain-sonic)">Sonic</span>
+            <span class="integrations__chain">Pimlico</span>
+            <span class="integrations__chain">Rhinestone</span>
+            <!-- Duplicate for seamless loop -->
+            <span class="integrations__chain" style="--chain-color: var(--color-chain-eth)">Ethereum</span>
+            <span class="integrations__chain" style="--chain-color: var(--color-chain-base)">Base</span>
+            <span class="integrations__chain" style="--chain-color: var(--color-chain-arb)">Arbitrum</span>
+            <span class="integrations__chain" style="--chain-color: var(--color-chain-op)">Optimism</span>
+            <span class="integrations__chain" style="--chain-color: var(--color-chain-poly)">Polygon</span>
+            <span class="integrations__chain" style="--chain-color: var(--color-chain-avax)">Avalanche</span>
+            <span class="integrations__chain" style="--chain-color: var(--color-chain-sonic)">Sonic</span>
+            <span class="integrations__chain">Pimlico</span>
+            <span class="integrations__chain">Rhinestone</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- #14 Traction -->
+    <section class="section section--alt" id="traction">
+      <div class="container">
+        <span class="section__label">Team</span>
+        <h2 class="section__headline">Small team. Big leverage.</h2>
+        <div class="traction__grid grid-2" data-animate="stagger">
+          <div class="card traction__card">
+            <span class="traction__stat">&#127942; 1st Place</span>
+            <p class="traction__text">ETHGlobal HackMoney 2026 — "Best DeFi Composer App" by LI.FI</p>
+          </div>
+          <div class="card traction__card">
+            <span class="traction__stat">2 engineers</span>
+            <p class="traction__text">+ AI-assisted development (10-20x leverage)</p>
+          </div>
+          <div class="card traction__card">
+            <span class="traction__stat">$8-10K/mo</span>
+            <p class="traction__text">Burn rate = 20x more capital efficient than typical crypto startup</p>
+          </div>
+          <div class="card traction__card">
+            <span class="traction__stat">Battle-tested stack</span>
+            <p class="traction__text">Built on ZeroDev + LI.FI + CCTP v2 — audited, production infrastructure</p>
+          </div>
+        </div>
+        <div class="traction__links" data-animate="fade-up">
+          <a href="https://ethglobal.com" class="btn btn--ghost" target="_blank" rel="noopener">ETHGlobal Showcase</a>
+          <a href="https://github.com/omniflow" class="btn btn--ghost" target="_blank" rel="noopener">GitHub</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- #15 CTA -->
+    <section class="section bg-mesh bg-mesh--cta" id="cta">
+      <div class="container cta__container">
+        <h2 class="section__headline cta__headline">Your payments. One engine.</h2>
+        <p class="cta__subtitle">Start free. No credit card. No seed phrase. Deploy in minutes.</p>
+        <div class="cta__buttons">
+          <a href="/app/" class="btn btn--primary btn--rotating-border btn--lg">Launch App</a>
+          <a href="#" class="btn btn--ghost btn--lg">Book a Demo</a>
+        </div>
+        <div class="cta__stats">
+          <span>30+ chains</span>
+          <span class="cta__dot">&middot;</span>
+          <span>$0 gas</span>
+          <span class="cta__dot">&middot;</span>
+          <span>Non-custodial</span>
+          <span class="cta__dot">&middot;</span>
+          <span>Any token</span>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- #16 Footer -->
+  <footer class="footer" id="footer">
+    <div class="container footer__container">
+      <div class="footer__brand">
+        <span class="footer__logo">OmniFlow</span>
+        <p class="footer__tagline">Cross-chain payment infrastructure for crypto teams.</p>
+      </div>
+      <div class="footer__links">
+        <a href="https://docs.omniflow.dev" target="_blank" rel="noopener">Docs</a>
+        <a href="https://github.com/omniflow" target="_blank" rel="noopener">GitHub</a>
+        <a href="https://twitter.com/omniflow_dev" target="_blank" rel="noopener">Twitter</a>
+        <a href="https://ethglobal.com" target="_blank" rel="noopener">ETHGlobal</a>
+      </div>
+      <div class="footer__tech">
+        Built with ZeroDev + CCTP v2 + LI.FI + Pimlico
+      </div>
+      <div class="footer__legal">
+        <span>&copy; 2026 OmniFlow</span>
+        <a href="#">Terms</a>
+        <a href="#">Privacy</a>
+      </div>
+    </div>
+  </footer>
+
+  <!-- JS: Libraries (CDN) -->
+  <script src="https://cdn.jsdelivr.net/npm/lenis@1/dist/lenis.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3/dist/gsap.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3/dist/ScrollTrigger.min.js"></script>
+
+  <!-- JS: App -->
+  <script src="js/main.js"></script>
+  <script src="js/flowfield.js"></script>
+  <script src="js/animations.js"></script>
+  <script src="js/batch-demo.js"></script>
+  <script src="js/interactions.js"></script>
+</body>
+</html>

@@ -1,0 +1,85 @@
+/* ═══════════════════════════════════════════
+   OmniFlow Design Tokens
+   ═══════════════════════════════════════════ */
+
+/* ── Shared tokens (both themes) ── */
+:root {
+  /* Brand */
+  --color-primary: #1894E8;
+  --color-purple: #9F72FF;
+  --color-mint: #62E2A4;
+  --color-gradient: linear-gradient(135deg, #1894E8, #9F72FF);
+  --color-glow: rgba(24, 148, 232, 0.15);
+
+  /* Chain colors */
+  --color-chain-eth: #627eea;
+  --color-chain-base: #0052ff;
+  --color-chain-arb: #28a0f0;
+  --color-chain-poly: #8247e5;
+  --color-chain-op: #ff0420;
+  --color-chain-avax: #e84142;
+  --color-chain-sonic: #16c784;
+
+  /* Typography */
+  --font-display: 'Sora', sans-serif;
+  --font-body: 'Sora', sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+
+  /* Spacing scale (base 4px) */
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-12: 48px;
+  --space-16: 64px;
+  --space-20: 80px;
+  --space-24: 96px;
+  --space-30: 120px;
+
+  /* Border radius */
+  --radius-card: 8px;
+  --radius-modal: 12px;
+  --radius-card-lg: 16px;
+  --radius-pill: 50px;
+
+  /* Animation */
+  --ease-default: cubic-bezier(0.25, 0.1, 0.25, 1);
+  --duration-hover: 300ms;
+
+  /* Layout */
+  --container-max: 1200px;
+  --nav-height: 72px;
+}
+
+/* ── Dark theme (default) ── */
+[data-theme="dark"] {
+  --color-bg-primary: #0B0D12;
+  --color-bg-secondary: #131620;
+  --color-bg-card: #1A1D27;
+  --color-bg-elevated: #222634;
+  --color-text-primary: #E4E5EA;
+  --color-text-secondary: #7C7E8A;
+  --color-border: rgba(255, 255, 255, 0.08);
+  --color-glass: rgba(255, 255, 255, 0.06);
+  --mesh-opacity: 0.04;
+  --flow-opacity: 0.35;
+  --nav-bg: rgba(11, 13, 18, 0.7);
+  --footer-bg: #0B0D12;
+}
+
+/* ── Light theme ── */
+[data-theme="light"] {
+  --color-bg-primary: #FFFFFF;
+  --color-bg-secondary: #F8F9FC;
+  --color-bg-card: #FFFFFF;
+  --color-bg-elevated: #F1F3F5;
+  --color-text-primary: #1C132C;
+  --color-text-secondary: #6B7280;
+  --color-border: rgba(0, 0, 0, 0.08);
+  --color-glass: rgba(0, 0, 0, 0.04);
+  --mesh-opacity: 0.10;
+  --flow-opacity: 0.20;
+  --nav-bg: rgba(255, 255, 255, 0.7);
+  --footer-bg: #0B0D12;
+}
