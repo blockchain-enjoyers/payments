@@ -4,7 +4,9 @@
    ═══════════════════════════════════════════ */
 
 /* ── Reset ── */
-*, *::before, *::after {
+*,
+*::before,
+*::after {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
@@ -111,14 +113,24 @@ body {
 }
 
 @media (min-width: 768px) {
-  .grid-2 { grid-template-columns: repeat(2, 1fr); }
-  .grid-3 { grid-template-columns: repeat(2, 1fr); }
-  .grid-4 { grid-template-columns: repeat(2, 1fr); }
+  .grid-2 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .grid-3 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .grid-4 {
+    grid-template-columns: repeat(2, 1fr);
+  }
 }
 
 @media (min-width: 1280px) {
-  .grid-3 { grid-template-columns: repeat(3, 1fr); }
-  .grid-4 { grid-template-columns: repeat(4, 1fr); }
+  .grid-3 {
+    grid-template-columns: repeat(3, 1fr);
+  }
+  .grid-4 {
+    grid-template-columns: repeat(4, 1fr);
+  }
 }
 
 /* ── Typography ── */
@@ -128,7 +140,9 @@ a {
   transition: opacity var(--duration-hover) var(--ease-default);
 }
 
-a:hover { opacity: 0.8; }
+a:hover {
+  opacity: 0.8;
+}
 
 /* ── Button base ── */
 .btn {
@@ -140,8 +154,9 @@ a:hover { opacity: 0.8; }
   border: none;
   cursor: pointer;
   border-radius: var(--radius-pill);
-  transition: transform var(--duration-hover) var(--ease-default),
-              box-shadow var(--duration-hover) var(--ease-default);
+  transition:
+    transform var(--duration-hover) var(--ease-default),
+    box-shadow var(--duration-hover) var(--ease-default);
   min-height: 44px;
   min-width: 44px;
 }
@@ -191,8 +206,9 @@ a:hover { opacity: 0.8; }
   border: 1px solid var(--color-border);
   border-radius: var(--radius-card-lg);
   padding: var(--space-8);
-  transition: background var(--duration-hover) var(--ease-default),
-              border-color var(--duration-hover) var(--ease-default);
+  transition:
+    background var(--duration-hover) var(--ease-default),
+    border-color var(--duration-hover) var(--ease-default);
 }
 
 .card:hover {

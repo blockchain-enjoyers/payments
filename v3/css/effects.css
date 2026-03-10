@@ -20,7 +20,7 @@
 }
 
 .bg-mesh::before {
-  content: '';
+  content: "";
   position: absolute;
   inset: 0;
   pointer-events: none;
@@ -30,24 +30,38 @@
 /* Problem section (#2) — 2 blobs */
 .bg-mesh--problem::before {
   background:
-    radial-gradient(ellipse 50% 40% at 30% 40%, var(--color-primary), transparent),
-    radial-gradient(ellipse 40% 50% at 70% 60%, var(--color-purple), transparent);
+    radial-gradient(
+      ellipse 50% 40% at 30% 40%,
+      var(--color-primary),
+      transparent
+    ),
+    radial-gradient(
+      ellipse 40% 50% at 70% 60%,
+      var(--color-purple),
+      transparent
+    );
   opacity: var(--mesh-opacity);
   animation: meshDrift 20s ease-in-out infinite alternate;
 }
 
 /* Use Cases section (#6) — 1 centered blob */
 .bg-mesh--usecases::before {
-  background:
-    radial-gradient(ellipse 60% 50% at 50% 50%, var(--color-primary), transparent);
+  background: radial-gradient(
+    ellipse 60% 50% at 50% 50%,
+    var(--color-primary),
+    transparent
+  );
   opacity: var(--mesh-opacity);
   animation: meshDrift 25s ease-in-out infinite alternate;
 }
 
 /* Security section (#9) — shield-shaped glow */
 .bg-mesh--security::before {
-  background:
-    radial-gradient(ellipse 40% 60% at 50% 40%, var(--color-mint), transparent);
+  background: radial-gradient(
+    ellipse 40% 60% at 50% 40%,
+    var(--color-mint),
+    transparent
+  );
   opacity: var(--mesh-opacity);
   animation: meshDrift 18s ease-in-out infinite alternate;
 }
@@ -55,16 +69,27 @@
 /* Features section (#8) — dual blob */
 .bg-mesh--features::before {
   background:
-    radial-gradient(ellipse 50% 40% at 40% 50%, var(--color-primary), transparent),
-    radial-gradient(ellipse 40% 40% at 60% 40%, var(--color-purple), transparent);
+    radial-gradient(
+      ellipse 50% 40% at 40% 50%,
+      var(--color-primary),
+      transparent
+    ),
+    radial-gradient(
+      ellipse 40% 40% at 60% 40%,
+      var(--color-purple),
+      transparent
+    );
   opacity: var(--mesh-opacity);
   animation: meshDrift 22s ease-in-out infinite alternate;
 }
 
 /* Traction section (#14) — mint glow */
 .bg-mesh--traction::before {
-  background:
-    radial-gradient(ellipse 45% 50% at 50% 50%, var(--color-mint), transparent);
+  background: radial-gradient(
+    ellipse 45% 50% at 50% 50%,
+    var(--color-mint),
+    transparent
+  );
   opacity: var(--mesh-opacity);
   animation: meshDrift 20s ease-in-out infinite alternate;
 }
@@ -72,15 +97,27 @@
 /* CTA section (#15) — hero callback */
 .bg-mesh--cta::before {
   background:
-    radial-gradient(ellipse 50% 40% at 40% 50%, var(--color-primary), transparent),
-    radial-gradient(ellipse 40% 40% at 60% 50%, var(--color-purple), transparent);
+    radial-gradient(
+      ellipse 50% 40% at 40% 50%,
+      var(--color-primary),
+      transparent
+    ),
+    radial-gradient(
+      ellipse 40% 40% at 60% 50%,
+      var(--color-purple),
+      transparent
+    );
   opacity: var(--mesh-opacity);
   animation: meshDrift 22s ease-in-out infinite alternate;
 }
 
 @keyframes meshDrift {
-  0% { transform: translate(0, 0) scale(1); }
-  100% { transform: translate(30px, -20px) scale(1.05); }
+  0% {
+    transform: translate(0, 0) scale(1);
+  }
+  100% {
+    transform: translate(30px, -20px) scale(1.05);
+  }
 }
 
 /* ── Rotating gradient border (CTA button) ── */
@@ -95,17 +132,23 @@
 }
 
 .btn--rotating-border::before {
-  content: '';
+  content: "";
   position: absolute;
   inset: -2px;
   border-radius: var(--radius-pill);
-  background: conic-gradient(from var(--rotate-angle, 0deg), #1894E8, #9F72FF, #62E2A4, #1894E8);
+  background: conic-gradient(
+    from var(--rotate-angle, 0deg),
+    #1894e8,
+    #9f72ff,
+    #62e2a4,
+    #1894e8
+  );
   z-index: -1;
   animation: rotateBorder 4s linear infinite;
 }
 
 .btn--rotating-border::after {
-  content: '';
+  content: "";
   position: absolute;
   inset: 0;
   border-radius: var(--radius-pill);
@@ -114,11 +157,13 @@
 }
 
 @keyframes rotateBorder {
-  to { --rotate-angle: 360deg; }
+  to {
+    --rotate-angle: 360deg;
+  }
 }
 
 @property --rotate-angle {
-  syntax: '<angle>';
+  syntax: "<angle>";
   initial-value: 0deg;
   inherits: false;
 }
@@ -146,35 +191,81 @@
 }
 
 .badge::before {
-  content: '';
+  content: "";
   position: absolute;
   inset: -1px;
   border-radius: var(--radius-pill);
   padding: 1px;
-  background: linear-gradient(135deg, #9F72FF, #1894E8, #62E2A4);
-  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  background: linear-gradient(135deg, #9f72ff, #1894e8, #62e2a4);
+  -webkit-mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
   -webkit-mask-composite: xor;
   mask-composite: exclude;
 }
 
 /* ── Isometric hero animations ── */
-@keyframes floatA { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
-@keyframes floatB { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
-@keyframes floatC { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
+@keyframes floatA {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+@keyframes floatB {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+@keyframes floatC {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-5px);
+  }
+}
 
-.float-a { animation: floatA 3s ease-in-out infinite; }
-.float-b { animation: floatB 3.4s ease-in-out infinite 0.4s; }
-.float-c { animation: floatC 2.8s ease-in-out infinite 0.8s; }
-.float-d { animation: floatA 3.2s ease-in-out infinite 0.2s; }
-.float-e { animation: floatB 3.6s ease-in-out infinite 0.6s; }
-.float-f { animation: floatC 3s ease-in-out infinite 1s; }
-.float-g { animation: floatA 3.1s ease-in-out infinite 0.5s; }
-.float-h { animation: floatB 2.9s ease-in-out infinite 0.9s; }
+.float-a {
+  animation: floatA 3s ease-in-out infinite;
+}
+.float-b {
+  animation: floatB 3.4s ease-in-out infinite 0.4s;
+}
+.float-c {
+  animation: floatC 2.8s ease-in-out infinite 0.8s;
+}
+.float-d {
+  animation: floatA 3.2s ease-in-out infinite 0.2s;
+}
+.float-e {
+  animation: floatB 3.6s ease-in-out infinite 0.6s;
+}
+.float-f {
+  animation: floatC 3s ease-in-out infinite 1s;
+}
+.float-g {
+  animation: floatA 3.1s ease-in-out infinite 0.5s;
+}
+.float-h {
+  animation: floatB 2.9s ease-in-out infinite 0.9s;
+}
 
 /* Dash flow animation */
 @keyframes dashFlow {
-  to { stroke-dashoffset: -24; }
+  to {
+    stroke-dashoffset: -24;
+  }
 }
 .flow-line {
   stroke-dasharray: 8 4;
@@ -183,18 +274,32 @@
 
 /* Center glow pulse */
 @keyframes glowPulse {
-  0%,100% { opacity: 0.3; }
-  50% { opacity: 0.7; }
+  0%,
+  100% {
+    opacity: 0.3;
+  }
+  50% {
+    opacity: 0.7;
+  }
 }
-.center-glow { animation: glowPulse 2.5s ease-in-out infinite; }
+.center-glow {
+  animation: glowPulse 2.5s ease-in-out infinite;
+}
 
 /* Highlight states (toggled via JS) */
-.flow-line.highlight { stroke-opacity: 1 !important; filter: url(#lineGlow); }
-.flow-line.highlight { animation-duration: 0.5s; }
+.flow-line.highlight {
+  stroke-opacity: 1 !important;
+  filter: url(#lineGlow);
+}
+.flow-line.highlight {
+  animation-duration: 0.5s;
+}
 
 /* Hide on mobile */
 @media (max-width: 767px) {
-  .hide-mobile { display: none; }
+  .hide-mobile {
+    display: none;
+  }
 }
 
 /* ── Reduced motion ── */
@@ -211,21 +316,44 @@
     animation: none;
   }
 
-  .float-a, .float-b, .float-c, .float-d,
-  .float-e, .float-f, .float-g, .float-h { animation: none; }
-  .flow-line { animation: none; }
-  .center-glow { animation: none; opacity: 0.5; }
-  .packet { display: none; }
+  .float-a,
+  .float-b,
+  .float-c,
+  .float-d,
+  .float-e,
+  .float-f,
+  .float-g,
+  .float-h {
+    animation: none;
+  }
+  .flow-line {
+    animation: none;
+  }
+  .center-glow {
+    animation: none;
+    opacity: 0.5;
+  }
+  .packet {
+    display: none;
+  }
 
   .hero--flow-fallback::before {
-    content: '';
+    content: "";
     position: fixed;
     inset: 0;
     z-index: 0;
     pointer-events: none;
     background:
-      radial-gradient(ellipse 80% 60% at 30% 40%, rgba(24, 148, 232, 0.08) 0%, transparent 70%),
-      radial-gradient(ellipse 60% 50% at 70% 60%, rgba(159, 114, 255, 0.06) 0%, transparent 70%);
+      radial-gradient(
+        ellipse 80% 60% at 30% 40%,
+        rgba(24, 148, 232, 0.08) 0%,
+        transparent 70%
+      ),
+      radial-gradient(
+        ellipse 60% 50% at 70% 60%,
+        rgba(159, 114, 255, 0.06) 0%,
+        transparent 70%
+      );
   }
 }
 

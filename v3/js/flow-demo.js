@@ -1,21 +1,23 @@
 /* OmniFlow Flow Demo — How It Works interactive canvas */
 (function () {
-  'use strict';
+  "use strict";
 
-  var canvas = document.getElementById('flowDemoCanvas');
-  var demoEl = document.getElementById('flowDemo');
+  var canvas = document.getElementById("flowDemoCanvas");
+  var demoEl = document.getElementById("flowDemo");
   if (!canvas || !demoEl) return;
 
-  var ctx = canvas.getContext('2d');
-  var reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  var isMobile = window.matchMedia('(max-width: 767px)').matches;
+  var ctx = canvas.getContext("2d");
+  var reducedMotion = window.matchMedia(
+    "(prefers-reduced-motion: reduce)",
+  ).matches;
+  var isMobile = window.matchMedia("(max-width: 767px)").matches;
   if (reducedMotion || isMobile) return;
 
   // Nodes
-  var senderEls = demoEl.querySelectorAll('.flow-demo__node--sender');
-  var recipientEls = demoEl.querySelectorAll('.flow-demo__node--recipient');
-  var hubEl = document.getElementById('flowDemoHub');
-  var stepEls = demoEl.querySelectorAll('.flow-demo__step');
+  var senderEls = demoEl.querySelectorAll(".flow-demo__node--sender");
+  var recipientEls = demoEl.querySelectorAll(".flow-demo__node--recipient");
+  var hubEl = document.getElementById("flowDemoHub");
+  var stepEls = demoEl.querySelectorAll(".flow-demo__step");
 
   // State
   var W, H;
@@ -27,11 +29,11 @@
   // Colors
   var SENDER_COLOR = [24, 148, 232];
   var RECIPIENT_COLORS = [
-    [0, 82, 255],    // Base
-    [40, 160, 240],  // Arbitrum
-    [98, 126, 234],  // Ethereum
-    [255, 4, 32],    // Optimism
-    [22, 199, 132],  // Sonic
+    [0, 82, 255], // Base
+    [40, 160, 240], // Arbitrum
+    [98, 126, 234], // Ethereum
+    [255, 4, 32], // Optimism
+    [22, 199, 132], // Sonic
   ];
 
   function resize() {
@@ -53,15 +55,23 @@
     var demoRect = demoEl.getBoundingClientRect();
     var elRect = el.getBoundingClientRect();
     var y = elRect.top + elRect.height / 2 - demoRect.top;
-    if (side === 'right') return { x: elRect.right - demoRect.left + 2, y: y };
+    if (side === "right") return { x: elRect.right - demoRect.left + 2, y: y };
     return { x: elRect.left - demoRect.left - 2, y: y };
   }
 
   function bezier(t, p0, p1, p2, p3) {
     var u = 1 - t;
     return {
-      x: u*u*u*p0.x + 3*u*u*t*p1.x + 3*u*t*t*p2.x + t*t*t*p3.x,
-      y: u*u*u*p0.y + 3*u*u*t*p1.y + 3*u*t*t*p2.y + t*t*t*p3.y,
+      x:
+        u * u * u * p0.x +
+        3 * u * u * t * p1.x +
+        3 * u * t * t * p2.x +
+        t * t * t * p3.x,
+      y:
+        u * u * u * p0.y +
+        3 * u * u * t * p1.y +
+        3 * u * t * t * p2.y +
+        t * t * t * p3.y,
     };
   }
 
@@ -78,23 +88,38 @@
     var hub = getCenter(hubEl);
 
     for (var si = 0; si < senderEls.length; si++) {
-      var start = getEdge(senderEls[si], 'right');
+      var start = getEdge(senderEls[si], "right");
       var dx = hub.x - start.x;
       ctx.beginPath();
       ctx.moveTo(start.x, start.y);
-      ctx.bezierCurveTo(start.x + dx * 0.4, start.y, hub.x - dx * 0.3, hub.y, hub.x, hub.y);
-      ctx.strokeStyle = 'rgba(24, 148, 232, ' + (alpha * 0.15) + ')';
+      ctx.bezierCurveTo(
+        start.x + dx * 0.4,
+        start.y,
+        hub.x - dx * 0.3,
+        hub.y,
+        hub.x,
+        hub.y,
+      );
+      ctx.strokeStyle = "rgba(24, 148, 232, " + alpha * 0.15 + ")";
       ctx.stroke();
     }
 
     for (var ri = 0; ri < recipientEls.length; ri++) {
-      var end = getEdge(recipientEls[ri], 'left');
+      var end = getEdge(recipientEls[ri], "left");
       var dx2 = end.x - hub.x;
       var c = RECIPIENT_COLORS[ri] || SENDER_COLOR;
       ctx.beginPath();
       ctx.moveTo(hub.x, hub.y);
-      ctx.bezierCurveTo(hub.x + dx2 * 0.3, hub.y, end.x - dx2 * 0.4, end.y, end.x, end.y);
-      ctx.strokeStyle = 'rgba(' + c[0] + ',' + c[1] + ',' + c[2] + ',' + (alpha * 0.15) + ')';
+      ctx.bezierCurveTo(
+        hub.x + dx2 * 0.3,
+        hub.y,
+        end.x - dx2 * 0.4,
+        end.y,
+        end.x,
+        end.y,
+      );
+      ctx.strokeStyle =
+        "rgba(" + c[0] + "," + c[1] + "," + c[2] + "," + alpha * 0.15 + ")";
       ctx.stroke();
     }
 
@@ -106,15 +131,15 @@
     var hub = getCenter(hubEl);
     var start, end, color, idx;
 
-    if (type === 'in') {
+    if (type === "in") {
       idx = Math.floor(Math.random() * senderEls.length);
-      start = getEdge(senderEls[idx], 'right');
+      start = getEdge(senderEls[idx], "right");
       end = hub;
       color = SENDER_COLOR;
     } else {
       idx = Math.floor(Math.random() * recipientEls.length);
       start = hub;
-      end = getEdge(recipientEls[idx], 'left');
+      end = getEdge(recipientEls[idx], "left");
       color = RECIPIENT_COLORS[idx] || SENDER_COLOR;
     }
 
@@ -155,7 +180,16 @@
         if (r < 0.5) continue;
         ctx.beginPath();
         ctx.arc(tp.x, tp.y, r, 0, Math.PI * 2);
-        ctx.fillStyle = 'rgba(' + f.color[0] + ',' + f.color[1] + ',' + f.color[2] + ',' + alpha + ')';
+        ctx.fillStyle =
+          "rgba(" +
+          f.color[0] +
+          "," +
+          f.color[1] +
+          "," +
+          f.color[2] +
+          "," +
+          alpha +
+          ")";
         ctx.fill();
       }
 
@@ -166,13 +200,31 @@
 
       ctx.beginPath();
       ctx.arc(pos.x, pos.y, f.radius, 0, Math.PI * 2);
-      ctx.fillStyle = 'rgba(' + f.color[0] + ',' + f.color[1] + ',' + f.color[2] + ',' + (opacity * 0.9) + ')';
+      ctx.fillStyle =
+        "rgba(" +
+        f.color[0] +
+        "," +
+        f.color[1] +
+        "," +
+        f.color[2] +
+        "," +
+        opacity * 0.9 +
+        ")";
       ctx.fill();
 
       // Outer glow
       ctx.beginPath();
       ctx.arc(pos.x, pos.y, f.radius * 2.5, 0, Math.PI * 2);
-      ctx.fillStyle = 'rgba(' + f.color[0] + ',' + f.color[1] + ',' + f.color[2] + ',' + (opacity * 0.15) + ')';
+      ctx.fillStyle =
+        "rgba(" +
+        f.color[0] +
+        "," +
+        f.color[1] +
+        "," +
+        f.color[2] +
+        "," +
+        opacity * 0.15 +
+        ")";
       ctx.fill();
     }
   }
@@ -185,25 +237,25 @@
     // Update step indicators
     for (var i = 0; i < stepEls.length; i++) {
       if (i <= p) {
-        stepEls[i].classList.add('flow-demo__step--active');
+        stepEls[i].classList.add("flow-demo__step--active");
       } else {
-        stepEls[i].classList.remove('flow-demo__step--active');
+        stepEls[i].classList.remove("flow-demo__step--active");
       }
     }
 
     // Update node visibility
     for (var si = 0; si < senderEls.length; si++) {
       if (p >= 0) {
-        senderEls[si].classList.add('is-active');
+        senderEls[si].classList.add("is-active");
       } else {
-        senderEls[si].classList.remove('is-active');
+        senderEls[si].classList.remove("is-active");
       }
     }
     for (var ri = 0; ri < recipientEls.length; ri++) {
       if (p >= 2) {
-        recipientEls[ri].classList.add('is-active');
+        recipientEls[ri].classList.add("is-active");
       } else {
-        recipientEls[ri].classList.remove('is-active');
+        recipientEls[ri].classList.remove("is-active");
       }
     }
   }
@@ -221,10 +273,10 @@
     var now = performance.now();
     if (phase >= 1 && now - lastSpawn > 800) {
       if (phase === 1) {
-        spawnFlight('in');
+        spawnFlight("in");
       } else if (phase >= 2) {
-        if (Math.random() > 0.5) spawnFlight('in');
-        else spawnFlight('out');
+        if (Math.random() > 0.5) spawnFlight("in");
+        else spawnFlight("out");
       }
       lastSpawn = now;
     }
@@ -242,7 +294,7 @@
   animate();
 
   // Cleanup on visibility change
-  window.addEventListener('omniflow:visibility', function(e) {
+  window.addEventListener("omniflow:visibility", function (e) {
     if (e.detail.hidden && animId) {
       cancelAnimationFrame(animId);
       animId = null;

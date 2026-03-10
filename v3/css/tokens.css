@@ -5,10 +5,10 @@
 /* ── Shared tokens (both themes) ── */
 :root {
   /* Brand */
-  --color-primary: #1894E8;
-  --color-purple: #9F72FF;
-  --color-mint: #62E2A4;
-  --color-gradient: linear-gradient(135deg, #1894E8, #9F72FF);
+  --color-primary: #1894e8;
+  --color-purple: #9f72ff;
+  --color-mint: #62e2a4;
+  --color-gradient: linear-gradient(135deg, #1894e8, #9f72ff);
   --color-glow: rgba(24, 148, 232, 0.15);
 
   /* Chain colors */
@@ -21,9 +21,9 @@
   --color-chain-sonic: #16c784;
 
   /* Typography */
-  --font-display: 'Sora', sans-serif;
-  --font-body: 'Sora', sans-serif;
-  --font-mono: 'JetBrains Mono', monospace;
+  --font-display: "Sora", sans-serif;
+  --font-body: "Sora", sans-serif;
+  --font-mono: "JetBrains Mono", monospace;
 
   /* Spacing scale (base 4px) */
   --space-2: 8px;
@@ -54,32 +54,32 @@
 
 /* ── Dark theme (default) ── */
 [data-theme="dark"] {
-  --color-bg-primary: #0B0D12;
+  --color-bg-primary: #0b0d12;
   --color-bg-secondary: #131620;
-  --color-bg-card: #1A1D27;
+  --color-bg-card: #1a1d27;
   --color-bg-elevated: #222634;
-  --color-text-primary: #E4E5EA;
-  --color-text-secondary: #7C7E8A;
+  --color-text-primary: #e4e5ea;
+  --color-text-secondary: #7c7e8a;
   --color-border: rgba(255, 255, 255, 0.08);
   --color-glass: rgba(255, 255, 255, 0.06);
   --mesh-opacity: 0.04;
   --flow-opacity: 0.35;
   --nav-bg: rgba(11, 13, 18, 0.7);
-  --footer-bg: #0B0D12;
+  --footer-bg: #0b0d12;
 }
 
 /* ── Light theme ── */
 [data-theme="light"] {
-  --color-bg-primary: #FFFFFF;
-  --color-bg-secondary: #F8F9FC;
-  --color-bg-card: #FFFFFF;
-  --color-bg-elevated: #F1F3F5;
-  --color-text-primary: #1C132C;
-  --color-text-secondary: #6B7280;
+  --color-bg-primary: #ffffff;
+  --color-bg-secondary: #f8f9fc;
+  --color-bg-card: #ffffff;
+  --color-bg-elevated: #f1f3f5;
+  --color-text-primary: #1c132c;
+  --color-text-secondary: #6b7280;
   --color-border: rgba(0, 0, 0, 0.08);
   --color-glass: rgba(0, 0, 0, 0.04);
-  --mesh-opacity: 0.10;
-  --flow-opacity: 0.20;
+  --mesh-opacity: 0.1;
+  --flow-opacity: 0.2;
   --nav-bg: rgba(255, 255, 255, 0.7);
-  --footer-bg: #0B0D12;
+  --footer-bg: #0b0d12;
 }
