@@ -219,6 +219,105 @@
     });
   }
 
+  // ── Problem Wall of Pain: horizontal scroll slides ──
+  function initProblemWall() {
+    var section = document.getElementById("problem");
+    if (!section || !section.classList.contains("problem-wall")) return;
+
+    var pin = section.querySelector(".problem-wall__pin");
+    var track = document.getElementById("problemTrack");
+    var dotsContainer = document.getElementById("problemDots");
+    var dots = dotsContainer ? dotsContainer.querySelectorAll(".problem-wall__dot") : [];
+    var slides = track.querySelectorAll(".problem-wall__slide");
+    var totalSlides = slides.length;
+    if (!pin || !track || totalSlides === 0) return;
+
+    ScrollTrigger.create({
+      trigger: section,
+      start: "top top",
+      end: "+=" + (totalSlides * 100) + "%",
+      pin: pin,
+      scrub: 1,
+      onUpdate: function (self) {
+        var progress = self.progress;
+
+        // Horizontal translate
+        var maxTranslate = (totalSlides - 1) * window.innerWidth;
+        var translateX = progress * maxTranslate;
+        track.style.transform = "translateX(" + (-translateX) + "px)";
+
+        // Active dot
+        var activeIndex = Math.min(
+          totalSlides - 1,
+          Math.floor(progress * totalSlides)
+        );
+
+        for (var i = 0; i < dots.length; i++) {
+          dots[i].classList.remove("active", "active--resolve");
+          if (i === activeIndex) {
+            if (i === totalSlides - 1) {
+              dots[i].classList.add("active--resolve");
+            } else {
+              dots[i].classList.add("active");
+            }
+          }
+        }
+      },
+      onEnter: function () {
+        if (dotsContainer) dotsContainer.classList.add("visible");
+      },
+      onLeave: function () {
+        if (dotsContainer) dotsContainer.classList.remove("visible");
+      },
+      onEnterBack: function () {
+        if (dotsContainer) dotsContainer.classList.add("visible");
+      },
+      onLeaveBack: function () {
+        if (dotsContainer) dotsContainer.classList.remove("visible");
+      },
+    });
+  }
+
+  // ── Section snap (magnetic scroll between full-screen sections) ──
+  function initSectionSnap() {
+    if (isMobile) return;
+
+    var targets = document.querySelectorAll(
+      "#hero, .section:not(#isometric):not(#faq)",
+    );
+    var totalScroll =
+      document.documentElement.scrollHeight - window.innerHeight;
+    if (totalScroll <= 0) return;
+
+    var positions = [];
+    targets.forEach(function (el) {
+      positions.push(el.offsetTop / totalScroll);
+    });
+
+    // Add isometric start + end-of-pin positions
+    var iso = document.getElementById("isometric");
+    if (iso) {
+      positions.push(iso.offsetTop / totalScroll);
+      var isoEnd = (iso.offsetTop + 2 * window.innerHeight) / totalScroll;
+      positions.push(Math.min(isoEnd, 1));
+    }
+
+    positions.sort(function (a, b) {
+      return a - b;
+    });
+
+    ScrollTrigger.create({
+      start: 0,
+      end: "max",
+      snap: {
+        snapTo: positions,
+        duration: { min: 0.2, max: 0.6 },
+        delay: 0.1,
+        ease: "power1.inOut",
+      },
+    });
+  }
+
   function init() {
     initHeroAnimation();
     initScrollReveal();
@@ -226,7 +325,9 @@
     initCounters();
     initSplitSections();
     initSplitStickyPins();
+    initProblemWall();
     initIsometricScroll();
+    // initSectionSnap();
   }
 
   if (document.readyState === "complete") {

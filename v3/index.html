@@ -29,6 +29,72 @@
       rel="stylesheet"
     />
 
+    <!-- FAQPage Schema (JSON-LD) -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "Is OmniFlow custodial?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "No. OmniFlow is fully non-custodial. Each user gets an isolated smart account (ERC-4337) that only they control. We never hold funds, private keys, or seed phrases."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Which chains are supported?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "OmniFlow supports 30+ EVM chains including Ethereum, Base, Arbitrum, Optimism, Polygon, Avalanche, and Sonic."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "How does gasless work?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "OmniFlow uses Account Abstraction (ERC-4337) with a paymaster. Gas fees are sponsored or deducted from the payment amount."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Is OmniFlow audited?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Trail of Bits audit planned for Q3 2026. Smart contracts are open-source and built on audited primitives: ZeroDev Kernel v3.3, Safe modules, and Circle CCTP v2."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "What tokens can I send and receive?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Any ERC-20 token on any supported chain. OmniFlow handles cross-chain swaps and bridging automatically via LI.FI."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "How do I integrate OmniFlow?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "OmniFlow provides a REST API and dashboard. Upload a CSV, or integrate programmatically with API keys and webhooks."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "What does it cost?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Small fee per transaction. No monthly subscriptions, no minimum volumes. Free during beta."
+          }
+        }
+      ]
+    }
+    </script>
+
     <!-- CSS -->
     <link rel="stylesheet" href="css/tokens.css" />
     <link rel="stylesheet" href="css/layout.css" />
@@ -41,8 +107,9 @@
       <a href="/" class="nav__logo">OmniFlow</a>
 
       <ul class="nav__links">
-        <li><a href="#how-it-works" class="nav__link">How It Works</a></li>
         <li><a href="#features" class="nav__link">Features</a></li>
+        <li><a href="#security" class="nav__link">Security</a></li>
+        <li><a href="#faq" class="nav__link">FAQ</a></li>
         <li>
           <a
             href="https://docs.omniflow.dev"
@@ -96,8 +163,9 @@
 
     <!-- Mobile menu -->
     <div class="nav__mobile-menu" id="mobileMenu">
-      <a href="#how-it-works">How It Works</a>
       <a href="#features">Features</a>
+      <a href="#security">Security</a>
+      <a href="#faq">FAQ</a>
       <a href="https://docs.omniflow.dev" target="_blank" rel="noopener"
         >Docs</a
       >
@@ -121,26 +189,16 @@
           </div>
 
           <h1 class="hero__headline">
-            Cross-chain payments.<br />Built for receivers.
+            Receiver-first<br />cross-chain payments.
           </h1>
 
           <p class="hero__subtitle">
-            One engine for pay-ins and payouts. One click.
+            Non-custodial pay-in and pay-out infrastructure.
+            Any token, any chain, one click.
           </p>
-
-          <div class="hero__stats">
-            <span class="hero__stat-value">Non-Custodial</span>
-            <span class="hero__stat-divider"></span>
-            <span class="hero__stat-value">Gasless</span>
-            <span class="hero__stat-divider"></span>
-            <span class="hero__stat-value">Any Chain</span>
-            <span class="hero__stat-divider"></span>
-            <span class="hero__stat-value">Any Token</span>
-          </div>
 
           <div class="hero__buttons">
             <a href="/app/" class="btn btn--primary">Launch App</a>
-            <a href="/demo/" class="btn btn--ghost">Try Demo</a>
           </div>
         </div>
 
@@ -151,14 +209,82 @@
     </section>
 
     <main>
-      <!-- #2 Isometric Visualization -->
+      <!-- #2 Problem — Wall of Pain (horizontal scroll slides) -->
+      <section class="problem-wall" id="problem">
+        <div class="problem-wall__pin">
+          <div class="problem-wall__track" id="problemTrack">
+
+            <div class="problem-wall__slide">
+              <div class="problem-wall__card">
+                <span class="problem-wall__red">"Which chain?"</span>
+                <span class="problem-wall__light">Money is money. That's a bug, not a question.</span>
+              </div>
+            </div>
+
+            <div class="problem-wall__slide">
+              <div class="problem-wall__card">
+                <span class="problem-wall__red">Buy ETH to send USDC.</span>
+                <span class="problem-wall__light">Read that again.</span>
+              </div>
+            </div>
+
+            <div class="problem-wall__slide">
+              <div class="problem-wall__card">
+                <span class="problem-wall__red">Approve. Sign. Switch. Approve. Sign. Confirm. Wait.</span>
+                <span class="problem-wall__light">That's one payment.</span>
+              </div>
+            </div>
+
+            <div class="problem-wall__slide">
+              <div class="problem-wall__card">
+                <span class="problem-wall__red">ETH on Arbitrum. USDC on Base.</span>
+                <span class="problem-wall__light">Hope they know how to bridge.</span>
+              </div>
+            </div>
+
+            <div class="problem-wall__slide">
+              <div class="problem-wall__card">
+                <span class="problem-wall__red">Copy-paste address and pray.</span>
+                <span class="problem-wall__light">Your bank has autopay, invoices, subscriptions. Crypto?</span>
+              </div>
+            </div>
+
+            <div class="problem-wall__slide">
+              <div class="problem-wall__card">
+                <span class="problem-wall__red">It's your money.</span>
+                <span class="problem-wall__light">Until they decide it's not.</span>
+              </div>
+            </div>
+
+            <div class="problem-wall__slide problem-wall__slide--resolve">
+              <div class="problem-wall__card">
+                <span class="problem-wall__resolve">What if none of this was your problem?</span>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- Dots -->
+        <div class="problem-wall__dots" id="problemDots">
+          <span class="problem-wall__dot"></span>
+          <span class="problem-wall__dot"></span>
+          <span class="problem-wall__dot"></span>
+          <span class="problem-wall__dot"></span>
+          <span class="problem-wall__dot"></span>
+          <span class="problem-wall__dot"></span>
+          <span class="problem-wall__dot"></span>
+        </div>
+      </section>
+
+      <!-- #3 Isometric Visualization / How It Works -->
       <section class="section section--isometric" id="isometric">
         <div class="container">
           <div class="isometric__wrap">
             <svg
               class="isometric-svg"
               id="isometricSvg"
-              viewBox="0 0 860 380"
+              viewBox="0 -10 860 400"
               xmlns="http://www.w3.org/2000/svg"
             >
               <defs>
@@ -258,6 +384,34 @@
                   <stop offset="100%" stop-color="#E84142" />
                 </linearGradient>
 
+                <!-- Packet glow filter -->
+                <filter
+                  id="pktGlow"
+                  x="-100%"
+                  y="-100%"
+                  width="300%"
+                  height="300%"
+                >
+                  <feGaussianBlur in="SourceGraphic" stdDeviation="3" />
+                </filter>
+
+                <!-- Sphere gradients -->
+                <radialGradient id="sphereBody" cx="32%" cy="28%">
+                  <stop offset="0%" stop-color="#3A4A8E" />
+                  <stop offset="30%" stop-color="#252D65" />
+                  <stop offset="70%" stop-color="#181D48" />
+                  <stop offset="100%" stop-color="#101335" />
+                </radialGradient>
+                <radialGradient id="sphereRim" cx="50%" cy="50%">
+                  <stop offset="85%" stop-color="transparent" />
+                  <stop offset="100%" stop-color="#1894E8" stop-opacity="0.15" />
+                </radialGradient>
+                <linearGradient id="specular" x1="0.3" y1="0" x2="0.7" y2="1">
+                  <stop offset="0%" stop-color="#fff" stop-opacity="0.18" />
+                  <stop offset="50%" stop-color="#fff" stop-opacity="0.03" />
+                  <stop offset="100%" stop-color="#fff" stop-opacity="0" />
+                </linearGradient>
+
                 <!-- Glow filters -->
                 <filter
                   id="cardGlow"
@@ -335,90 +489,6 @@
                 </filter>
               </defs>
 
-              <!-- Connection Paths: Source -> Center -->
-              <path
-                id="pathSrc1"
-                d="M 160 80 C 250 80, 300 155, 370 160"
-                fill="none"
-                stroke="url(#lineGradSrc1)"
-                stroke-width="1.5"
-                stroke-opacity="0.4"
-                class="flow-line"
-                data-group="src1"
-              />
-              <path
-                id="pathSrc2"
-                d="M 160 190 C 250 190, 300 175, 370 175"
-                fill="none"
-                stroke="url(#lineGradSrc2)"
-                stroke-width="1.5"
-                stroke-opacity="0.4"
-                class="flow-line"
-                data-group="src2"
-              />
-              <path
-                id="pathSrc3"
-                d="M 160 300 C 250 300, 300 200, 370 190"
-                fill="none"
-                stroke="url(#lineGradSrc3)"
-                stroke-width="1.5"
-                stroke-opacity="0.4"
-                class="flow-line"
-                data-group="src3"
-              />
-
-              <!-- Connection Paths: Center -> Recipient -->
-              <path
-                id="pathDst1"
-                d="M 530 145 C 600 140, 620 55, 700 52"
-                fill="none"
-                stroke="url(#lineGradBase)"
-                stroke-width="1.5"
-                stroke-opacity="0.4"
-                class="flow-line"
-                data-group="dst1"
-              />
-              <path
-                id="pathDst2"
-                d="M 530 160 C 600 158, 640 115, 700 118"
-                fill="none"
-                stroke="url(#lineGradArb)"
-                stroke-width="1.5"
-                stroke-opacity="0.4"
-                class="flow-line"
-                data-group="dst2"
-              />
-              <path
-                id="pathDst3"
-                d="M 530 175 C 600 175, 640 178, 700 185"
-                fill="none"
-                stroke="url(#lineGradEth)"
-                stroke-width="1.5"
-                stroke-opacity="0.4"
-                class="flow-line"
-                data-group="dst3"
-              />
-              <path
-                id="pathDst4"
-                d="M 530 190 C 600 195, 640 240, 700 252"
-                fill="none"
-                stroke="url(#lineGradOp)"
-                stroke-width="1.5"
-                stroke-opacity="0.4"
-                class="flow-line hide-mobile"
-                data-group="dst4"
-              />
-              <path
-                id="pathDst5"
-                d="M 530 200 C 600 210, 640 300, 700 318"
-                fill="none"
-                stroke="url(#lineGradAvax)"
-                stroke-width="1.5"
-                stroke-opacity="0.4"
-                class="flow-line hide-mobile"
-                data-group="dst5"
-              />
-
               <!-- Source Cards (Left) -->
               <!-- Treasury -->
               <g
@@ -431,25 +501,24 @@
                   y="0"
                   width="140"
                   height="66"
-                  rx="10"
+                  rx="2"
                   fill="#1A1D27"
                   stroke="#2A2D37"
                   stroke-width="1"
                   filter="url(#cardGlow)"
                 />
                 <polygon
-                  points="10,0 140,0 130,-12 0,-12"
+                  points="0,0 140,0 152,-14 12,-14"
+                  fill="#282B38"
+                  stroke="#2A2D37"
+                  stroke-width="0.5"
+                  opacity="0.85"
+                />
+                <polygon
+                  points="140,0 140,66 152,52 152,-14"
                   fill="#222530"
                   stroke="#2A2D37"
                   stroke-width="0.5"
-                  opacity="0.7"
-                />
-                <polygon
-                  points="140,0 140,66 130,54 130,-12"
-                  fill="#16181f"
-                  stroke="#2A2D37"
-                  stroke-width="0.5"
-                  opacity="0.5"
                 />
                 <rect
                   x="16"
@@ -502,25 +571,24 @@
                   y="0"
                   width="140"
                   height="66"
-                  rx="10"
+                  rx="2"
                   fill="#1A1D27"
                   stroke="#2A2D37"
                   stroke-width="1"
                   filter="url(#cardGlow)"
                 />
                 <polygon
-                  points="10,0 140,0 130,-12 0,-12"
+                  points="0,0 140,0 152,-14 12,-14"
+                  fill="#282B38"
+                  stroke="#2A2D37"
+                  stroke-width="0.5"
+                  opacity="0.85"
+                />
+                <polygon
+                  points="140,0 140,66 152,52 152,-14"
                   fill="#222530"
                   stroke="#2A2D37"
                   stroke-width="0.5"
-                  opacity="0.7"
-                />
-                <polygon
-                  points="140,0 140,66 130,54 130,-12"
-                  fill="#16181f"
-                  stroke="#2A2D37"
-                  stroke-width="0.5"
-                  opacity="0.5"
                 />
                 <rect
                   x="16"
@@ -597,25 +665,24 @@
                   y="0"
                   width="140"
                   height="66"
-                  rx="10"
+                  rx="2"
                   fill="#1A1D27"
                   stroke="#2A2D37"
                   stroke-width="1"
                   filter="url(#cardGlow)"
                 />
                 <polygon
-                  points="10,0 140,0 130,-12 0,-12"
+                  points="0,0 140,0 152,-14 12,-14"
+                  fill="#282B38"
+                  stroke="#2A2D37"
+                  stroke-width="0.5"
+                  opacity="0.85"
+                />
+                <polygon
+                  points="140,0 140,66 152,52 152,-14"
                   fill="#222530"
                   stroke="#2A2D37"
                   stroke-width="0.5"
-                  opacity="0.7"
-                />
-                <polygon
-                  points="140,0 140,66 130,54 130,-12"
-                  fill="#16181f"
-                  stroke="#2A2D37"
-                  stroke-width="0.5"
-                  opacity="0.5"
                 />
                 <circle
                   cx="22"
@@ -668,92 +735,188 @@
                 </text>
               </g>
 
-              <!-- Center Engine -->
+              <!-- Center Engine: Sphere + Orbital Rings -->
               <g
                 class="float-d"
                 id="centerEngine"
-                transform="translate(350, 95)"
+                transform="translate(450, 145)"
               >
+                <!-- Back halves of rings (behind sphere) -->
                 <ellipse
-                  cx="100"
-                  cy="85"
-                  rx="110"
-                  ry="80"
-                  fill="none"
-                  stroke="url(#brandGrad)"
-                  stroke-width="1.5"
-                  stroke-opacity="0.2"
-                  class="center-glow"
-                />
-                <ellipse
-                  cx="100"
-                  cy="85"
-                  rx="95"
-                  ry="68"
+                  rx="105"
+                  ry="32"
                   fill="none"
                   stroke="url(#brandGrad)"
                   stroke-width="1"
                   stroke-opacity="0.1"
+                  transform="rotate(-8)"
+                />
+                <path
+                  d="M -60 -70 A 72 72 0 0 1 60 70"
+                  fill="none"
+                  stroke="url(#brandGrad)"
+                  stroke-width="1"
+                  stroke-opacity="0.08"
+                />
+                <path
+                  d="M -8 -80 A 18 80 0 0 1 -8 80"
+                  fill="none"
+                  stroke="url(#brandGrad)"
+                  stroke-width="1"
+                  stroke-opacity="0.06"
+                />
+
+                <!-- Sphere body -->
+                <circle r="58" fill="url(#sphereBody)" />
+                <circle r="58" fill="url(#sphereRim)" />
+                <circle
+                  r="58"
+                  fill="none"
+                  stroke="url(#brandGrad)"
+                  stroke-width="1.2"
+                  stroke-opacity="0.35"
                   class="center-glow"
-                  style="animation-delay: 0.5s"
                 />
-                <polygon
-                  points="100,10 195,50 100,90 5,50"
-                  fill="url(#brandGrad)"
-                  opacity="0.9"
+
+                <!-- Specular highlight (top-left) -->
+                <ellipse
+                  cx="-16"
+                  cy="-22"
+                  rx="30"
+                  ry="24"
+                  fill="url(#specular)"
                 />
-                <polygon
-                  points="5,50 100,90 100,150 5,110"
-                  fill="#1060A8"
-                  opacity="0.8"
-                />
-                <polygon
-                  points="195,50 100,90 100,150 195,110"
-                  fill="#6B40C0"
-                  opacity="0.8"
-                />
-                <polygon
-                  points="100,10 195,50 100,90 5,50"
+                <!-- Rim light (right, purple) -->
+                <path
+                  d="M 40 -40 A 58 58 0 0 1 40 40"
                   fill="none"
-                  stroke="rgba(255,255,255,0.15)"
-                  stroke-width="1"
+                  stroke="#7C3AED"
+                  stroke-width="2"
+                  stroke-opacity="0.08"
                 />
-                <polygon
-                  points="5,50 100,90 100,150 5,110"
+
+                <!-- Equator hint -->
+                <ellipse
+                  cy="4"
+                  rx="56"
+                  ry="14"
                   fill="none"
-                  stroke="rgba(255,255,255,0.08)"
-                  stroke-width="1"
+                  stroke="url(#brandGrad)"
+                  stroke-width="0.5"
+                  stroke-opacity="0.12"
                 />
-                <polygon
-                  points="195,50 100,90 100,150 195,110"
-                  fill="none"
-                  stroke="rgba(255,255,255,0.08)"
-                  stroke-width="1"
-                />
+
+                <!-- Text on surface -->
                 <text
-                  x="100"
-                  y="58"
+                  y="-4"
                   text-anchor="middle"
                   fill="#FFFFFF"
-                  font-size="16"
+                  font-size="15"
                   font-weight="700"
                   font-family="Sora, sans-serif"
-                  opacity="0.95"
-                  transform="rotate(-15, 100, 55) skewX(15)"
+                  opacity="0.92"
+                  transform="rotate(-6) skewX(3)"
                 >
                   OmniFlow
                 </text>
                 <text
-                  x="100"
-                  y="76"
+                  y="14"
                   text-anchor="middle"
-                  fill="rgba(255,255,255,0.6)"
+                  fill="rgba(255,255,255,0.4)"
                   font-size="9"
                   font-family="Sora, sans-serif"
-                  transform="rotate(-15, 100, 73) skewX(15)"
+                  transform="rotate(-6) skewX(3)"
                 >
                   Engine
                 </text>
+
+                <!-- Front halves of rings -->
+                <path
+                  d="M 105 0 A 105 32 0 0 1 -105 0"
+                  fill="none"
+                  stroke="url(#brandGrad)"
+                  stroke-width="1.5"
+                  stroke-opacity="0.35"
+                  transform="rotate(-8)"
+                />
+                <path
+                  d="M 60 70 A 72 72 0 0 1 -60 -70"
+                  fill="none"
+                  stroke="url(#brandGrad)"
+                  stroke-width="1.5"
+                  stroke-opacity="0.3"
+                />
+                <path
+                  d="M -8 80 A 18 80 0 0 1 -8 -80"
+                  fill="none"
+                  stroke="url(#brandGrad)"
+                  stroke-width="1.5"
+                  stroke-opacity="0.25"
+                />
+
+                <!-- Full orbital paths (hidden, for animateMotion) -->
+                <path
+                  id="orbitPath"
+                  d="M -105 0 A 105 32 0 1 1 105 0 A 105 32 0 1 1 -105 0"
+                  fill="none"
+                  stroke-opacity="0"
+                  transform="rotate(-8)"
+                />
+                <path
+                  id="orbitPath2"
+                  d="M -60 -70 A 72 72 0 1 1 60 70 A 72 72 0 1 1 -60 -70"
+                  fill="none"
+                  stroke-opacity="0"
+                />
+                <path
+                  id="orbitPath3"
+                  d="M -8 -80 A 18 80 0 1 1 -8 80 A 18 80 0 1 1 -8 -80"
+                  fill="none"
+                  stroke-opacity="0"
+                />
+
+                <!-- Orbiting particles (animated via animateMotion) -->
+                <!-- Ring 1: horizontal — 2 particles -->
+                <circle r="3.5" fill="#1894E8" opacity="0.75" filter="url(#pktGlow)">
+                  <animateMotion dur="6s" repeatCount="indefinite">
+                    <mpath href="#orbitPath" />
+                  </animateMotion>
+                  <animate attributeName="opacity" values="0.75;0.35;0.75" dur="6s" repeatCount="indefinite" />
+                </circle>
+                <circle r="2.5" fill="#9F72FF" opacity="0.5" filter="url(#pktGlow)">
+                  <animateMotion dur="6s" repeatCount="indefinite" begin="3s">
+                    <mpath href="#orbitPath" />
+                  </animateMotion>
+                  <animate attributeName="opacity" values="0.5;0.2;0.5" dur="6s" repeatCount="indefinite" begin="3s" />
+                </circle>
+
+                <!-- Ring 2: tilted 45° — 2 particles -->
+                <circle r="3" fill="#7C3AED" opacity="0.65" filter="url(#pktGlow)">
+                  <animateMotion dur="7s" repeatCount="indefinite" begin="1s">
+                    <mpath href="#orbitPath2" />
+                  </animateMotion>
+                  <animate attributeName="opacity" values="0.65;0.25;0.65" dur="7s" repeatCount="indefinite" begin="1s" />
+                </circle>
+                <circle r="2" fill="#1894E8" opacity="0.4" filter="url(#pktGlow)">
+                  <animateMotion dur="7s" repeatCount="indefinite" begin="4.5s">
+                    <mpath href="#orbitPath2" />
+                  </animateMotion>
+                  <animate attributeName="opacity" values="0.4;0.15;0.4" dur="7s" repeatCount="indefinite" begin="4.5s" />
+                </circle>
+
+                <!-- Ring 3: vertical — 2 particles -->
+                <circle r="2.5" fill="#4B5CE8" opacity="0.55" filter="url(#pktGlow)">
+                  <animateMotion dur="5s" repeatCount="indefinite" begin="0.5s">
+                    <mpath href="#orbitPath3" />
+                  </animateMotion>
+                  <animate attributeName="opacity" values="0.55;0.2;0.55" dur="5s" repeatCount="indefinite" begin="0.5s" />
+                </circle>
+                <circle r="2" fill="#9F72FF" opacity="0.35" filter="url(#pktGlow)">
+                  <animateMotion dur="5s" repeatCount="indefinite" begin="3s">
+                    <mpath href="#orbitPath3" />
+                  </animateMotion>
+                  <animate attributeName="opacity" values="0.35;0.12;0.35" dur="5s" repeatCount="indefinite" begin="3s" />
+                </circle>
               </g>
 
               <!-- Recipient Cards (Right) -->
@@ -768,7 +931,7 @@
                   y="0"
                   width="140"
                   height="56"
-                  rx="8"
+                  rx="2"
                   fill="#1A1D27"
                   stroke="#2A2D37"
                   stroke-width="1"
@@ -782,18 +945,17 @@
                   fill="#0052FF"
                 />
                 <polygon
-                  points="8,0 140,0 132,-8 0,-8"
+                  points="0,0 140,0 150,-12 10,-12"
+                  fill="#282B38"
+                  stroke="#2A2D37"
+                  stroke-width="0.5"
+                  opacity="0.8"
+                />
+                <polygon
+                  points="140,0 140,56 150,44 150,-12"
                   fill="#222530"
                   stroke="#2A2D37"
                   stroke-width="0.5"
-                  opacity="0.6"
-                />
-                <polygon
-                  points="140,0 140,56 132,48 132,-8"
-                  fill="#16181f"
-                  stroke="#2A2D37"
-                  stroke-width="0.5"
-                  opacity="0.4"
                 />
                 <text
                   x="16"
@@ -840,7 +1002,7 @@
                   y="0"
                   width="140"
                   height="56"
-                  rx="8"
+                  rx="2"
                   fill="#1A1D27"
                   stroke="#2A2D37"
                   stroke-width="1"
@@ -854,18 +1016,17 @@
                   fill="#28A0F0"
                 />
                 <polygon
-                  points="8,0 140,0 132,-8 0,-8"
+                  points="0,0 140,0 150,-12 10,-12"
+                  fill="#282B38"
+                  stroke="#2A2D37"
+                  stroke-width="0.5"
+                  opacity="0.8"
+                />
+                <polygon
+                  points="140,0 140,56 150,44 150,-12"
                   fill="#222530"
                   stroke="#2A2D37"
                   stroke-width="0.5"
-                  opacity="0.6"
-                />
-                <polygon
-                  points="140,0 140,56 132,48 132,-8"
-                  fill="#16181f"
-                  stroke="#2A2D37"
-                  stroke-width="0.5"
-                  opacity="0.4"
                 />
                 <text
                   x="16"
@@ -912,7 +1073,7 @@
                   y="0"
                   width="140"
                   height="56"
-                  rx="8"
+                  rx="2"
                   fill="#1A1D27"
                   stroke="#2A2D37"
                   stroke-width="1"
@@ -926,18 +1087,17 @@
                   fill="#627EEA"
                 />
                 <polygon
-                  points="8,0 140,0 132,-8 0,-8"
+                  points="0,0 140,0 150,-12 10,-12"
+                  fill="#282B38"
+                  stroke="#2A2D37"
+                  stroke-width="0.5"
+                  opacity="0.8"
+                />
+                <polygon
+                  points="140,0 140,56 150,44 150,-12"
                   fill="#222530"
                   stroke="#2A2D37"
                   stroke-width="0.5"
-                  opacity="0.6"
-                />
-                <polygon
-                  points="140,0 140,56 132,48 132,-8"
-                  fill="#16181f"
-                  stroke="#2A2D37"
-                  stroke-width="0.5"
-                  opacity="0.4"
                 />
                 <text
                   x="16"
@@ -984,7 +1144,7 @@
                   y="0"
                   width="140"
                   height="56"
-                  rx="8"
+                  rx="2"
                   fill="#1A1D27"
                   stroke="#2A2D37"
                   stroke-width="1"
@@ -998,18 +1158,17 @@
                   fill="#FF0420"
                 />
                 <polygon
-                  points="8,0 140,0 132,-8 0,-8"
+                  points="0,0 140,0 150,-12 10,-12"
+                  fill="#282B38"
+                  stroke="#2A2D37"
+                  stroke-width="0.5"
+                  opacity="0.8"
+                />
+                <polygon
+                  points="140,0 140,56 150,44 150,-12"
                   fill="#222530"
                   stroke="#2A2D37"
                   stroke-width="0.5"
-                  opacity="0.6"
-                />
-                <polygon
-                  points="140,0 140,56 132,48 132,-8"
-                  fill="#16181f"
-                  stroke="#2A2D37"
-                  stroke-width="0.5"
-                  opacity="0.4"
                 />
                 <text
                   x="16"
@@ -1056,7 +1215,7 @@
                   y="0"
                   width="140"
                   height="56"
-                  rx="8"
+                  rx="2"
                   fill="#1A1D27"
                   stroke="#2A2D37"
                   stroke-width="1"
@@ -1070,18 +1229,17 @@
                   fill="#E84142"
                 />
                 <polygon
-                  points="8,0 140,0 132,-8 0,-8"
+                  points="0,0 140,0 150,-12 10,-12"
+                  fill="#282B38"
+                  stroke="#2A2D37"
+                  stroke-width="0.5"
+                  opacity="0.8"
+                />
+                <polygon
+                  points="140,0 140,56 150,44 150,-12"
                   fill="#222530"
                   stroke="#2A2D37"
                   stroke-width="0.5"
-                  opacity="0.6"
-                />
-                <polygon
-                  points="140,0 140,56 132,48 132,-8"
-                  fill="#16181f"
-                  stroke="#2A2D37"
-                  stroke-width="0.5"
-                  opacity="0.4"
                 />
                 <text
                   x="16"
@@ -1116,6 +1274,72 @@
                   A
                 </text>
               </g>
+
+              <!-- Hidden flow paths (tokens fly along these) -->
+              <path
+                id="pathSrc1"
+                d="M 166 71 C 250 71, 340 145, 390 145"
+                fill="none"
+                stroke-opacity="0"
+                class="flow-line"
+                data-group="src1"
+              />
+              <path
+                id="pathSrc2"
+                d="M 166 181 C 250 181, 340 145, 390 145"
+                fill="none"
+                stroke-opacity="0"
+                class="flow-line"
+                data-group="src2"
+              />
+              <path
+                id="pathSrc3"
+                d="M 166 291 C 250 291, 340 145, 390 145"
+                fill="none"
+                stroke-opacity="0"
+                class="flow-line"
+                data-group="src3"
+              />
+              <path
+                id="pathDst1"
+                d="M 510 145 C 570 145, 650 50, 700 50"
+                fill="none"
+                stroke-opacity="0"
+                class="flow-line"
+                data-group="dst1"
+              />
+              <path
+                id="pathDst2"
+                d="M 510 145 C 570 145, 650 118, 700 118"
+                fill="none"
+                stroke-opacity="0"
+                class="flow-line"
+                data-group="dst2"
+              />
+              <path
+                id="pathDst3"
+                d="M 510 145 C 570 145, 650 186, 700 186"
+                fill="none"
+                stroke-opacity="0"
+                class="flow-line"
+                data-group="dst3"
+              />
+              <path
+                id="pathDst4"
+                d="M 510 145 C 570 145, 650 254, 700 254"
+                fill="none"
+                stroke-opacity="0"
+                class="flow-line hide-mobile"
+                data-group="dst4"
+              />
+              <path
+                id="pathDst5"
+                d="M 510 145 C 570 145, 650 322, 700 322"
+                fill="none"
+                stroke-opacity="0"
+                class="flow-line hide-mobile"
+                data-group="dst5"
+              />
             </svg>
           </div>
           <div class="how-it-works__steps">
@@ -1141,40 +1365,6 @@
         </div>
       </section>
 
-      <!-- #3 How It Works -->
-      <section class="section section--alt" id="how-it-works">
-        <div class="container">
-          <span class="section__label">How It Works</span>
-          <h2 class="section__headline">Three steps. Gasless. Any chain.</h2>
-          <div class="steps__list" data-animate="stagger">
-            <div class="card steps__item">
-              <span class="steps__number">01</span>
-              <h3 class="steps__title">Upload</h3>
-              <p class="steps__text">
-                Drop a CSV, paste from a spreadsheet, or enter ENS names. Any
-                chain, any token, any number of recipients.
-              </p>
-            </div>
-            <div class="card steps__item">
-              <span class="steps__number">02</span>
-              <h3 class="steps__title">Route</h3>
-              <p class="steps__text">
-                OmniFlow finds optimal paths via CCTP v2 and LI.FI. Cross-chain
-                swaps, bridging, and batching — automatic.
-              </p>
-            </div>
-            <div class="card steps__item">
-              <span class="steps__number">03</span>
-              <h3 class="steps__title">Execute</h3>
-              <p class="steps__text">
-                One passkey tap. Account Abstraction handles gas. Everyone gets
-                paid in the token they want, on the chain they want.
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
       <!-- #4 Features -->
       <section class="section bg-mesh bg-mesh--features" id="features">
         <div class="container">
@@ -1191,28 +1381,28 @@
               </div>
               <h3 class="features__title">Cross-Chain</h3>
               <p class="features__text">
-                Route payments across 30+ EVM chains via CCTP v2 and LI.FI. No
-                manual bridging.
+                Stop building separate integrations per chain. One API, 30+
+                EVM chains, automatic bridging via CCTP v2 and LI.FI.
               </p>
             </div>
             <div class="card features__card" data-tilt>
               <div class="features__visual">
                 <span class="features__icon">&#128230;</span>
               </div>
-              <h3 class="features__title">Batch Operations</h3>
+              <h3 class="features__title">Batch Payouts</h3>
               <p class="features__text">
-                Any number of recipients, any number of chains, one click.
-                Upload CSV or paste from spreadsheet.
+                Pay 1,000 recipients in one transaction. Upload CSV, paste
+                from spreadsheet, or connect via API. Any chain mix.
               </p>
             </div>
             <div class="card features__card" data-tilt>
               <div class="features__visual">
                 <span class="features__icon">&#9889;</span>
               </div>
-              <h3 class="features__title">Gasless Execution</h3>
+              <h3 class="features__title">Gasless</h3>
               <p class="features__text">
-                Account Abstraction handles gas. No native tokens needed. One
-                passkey tap to approve.
+                Zero gas pop-ups. Zero failed transactions. Account
+                Abstraction handles everything — one passkey tap to approve.
               </p>
             </div>
             <div class="card features__card" data-tilt>
@@ -1221,8 +1411,8 @@
               </div>
               <h3 class="features__title">Any Token In/Out</h3>
               <p class="features__text">
-                Sender pays in ETH, recipient gets USDC on another chain.
-                Automatic conversion.
+                Accept USDC, pay out ETH. Any token, any direction. Automatic
+                conversion across chains — recipients get exactly what they want.
               </p>
             </div>
             <div class="card features__card" data-tilt>
@@ -1231,25 +1421,90 @@
               </div>
               <h3 class="features__title">Non-Custodial</h3>
               <p class="features__text">
-                Your keys, your funds. Session keys with spending limits, time
-                expiry, and contract whitelist.
+                Your users keep control. Zero custodial liability for you.
+                Smart accounts with spending limits, time locks, and contract
+                whitelists.
               </p>
             </div>
             <div class="card features__card" data-tilt>
               <div class="features__visual">
                 <span class="features__icon">&#128203;</span>
               </div>
-              <h3 class="features__title">Invoicing (Coming Soon)</h3>
+              <h3 class="features__title">Coming Q3</h3>
               <p class="features__text">
-                Generate payment links. Recipients pay in any token on any
-                chain. You receive what you want.
+                Invoicing, recurring payments, and DeFi operations. One engine,
+                expanding scope — from payroll to treasury management.
               </p>
             </div>
           </div>
         </div>
       </section>
 
-      <!-- #5 Integrations -->
+      <!-- #5 Security & Compliance -->
+      <section class="section section--alt" id="security">
+        <div class="container">
+          <span class="section__label">Security</span>
+          <h2 class="section__headline">Enterprise-grade security. Zero custody.</h2>
+
+          <div class="security__visual" data-animate="fade-up">
+            <div class="security__flow">
+              <div class="security__flow-node security__flow-node--user">
+                <span>&#128100;</span>
+                <span>User Wallet</span>
+              </div>
+              <span class="security__flow-arrow">&rarr;</span>
+              <div class="security__flow-node security__flow-node--smart">
+                <span>&#128737;</span>
+                <span>Smart Account</span>
+              </div>
+              <span class="security__flow-arrow">&rarr;</span>
+              <div class="security__flow-node security__flow-node--recipients">
+                <span>&#128101;</span>
+                <span>Recipients</span>
+              </div>
+            </div>
+            <p class="security__flow-caption">
+              Funds flow directly from user wallets through isolated smart
+              accounts. OmniFlow never touches your keys or holds your funds.
+            </p>
+          </div>
+
+          <div class="security__grid grid-3" data-animate="stagger">
+            <div class="card security__card">
+              <h3 class="security__title">Non-custodial by design</h3>
+              <p class="security__text">
+                No hot wallets, no pooled funds. Every user gets an isolated
+                smart account with their own keys.
+              </p>
+            </div>
+            <div class="card security__card">
+              <h3 class="security__title">Smart account isolation (ERC-4337)</h3>
+              <p class="security__text">
+                ZeroDev Kernel v3.3 + Safe modules. Scoped permissions via
+                Zodiac Roles v2. No over-privileged contracts.
+              </p>
+            </div>
+            <div class="card security__card">
+              <h3 class="security__title">Open-source contracts</h3>
+              <p class="security__text">
+                All smart contracts are open-source and verifiable. Trail of
+                Bits audit planned Q3 2026.
+              </p>
+            </div>
+          </div>
+
+          <div class="security__trust" data-animate="fade-up">
+            <span class="security__trust-label">Built on</span>
+            <div class="security__trust-logos">
+              <span class="security__trust-logo">ZeroDev Kernel v3.3</span>
+              <span class="security__trust-logo">Safe</span>
+              <span class="security__trust-logo">Circle CCTP v2</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- #6 Integrations -->
       <section class="section" id="integrations">
         <div class="container">
           <span class="section__label">Infrastructure</span>
@@ -1418,14 +1673,102 @@
         </div>
       </section>
 
-      <!-- #7 CTA -->
+      <!-- #8 Team / Founders -->
+      <section class="section" id="team">
+        <div class="container">
+          <span class="section__label">Team</span>
+          <h2 class="section__headline">Who's building this.</h2>
+          <div class="team__grid" data-animate="stagger">
+            <div class="card team__card">
+              <div class="team__avatar">I</div>
+              <h3 class="team__name">Ildar</h3>
+              <span class="team__role">Co-founder &amp; Engineering</span>
+              <p class="team__bio">
+                Full-stack engineer. Previously fintech infrastructure.
+                Building OmniFlow's smart account layer and routing engine.
+              </p>
+              <div class="team__links">
+                <a href="https://github.com" target="_blank" rel="noopener" class="team__link">GitHub</a>
+                <a href="https://linkedin.com" target="_blank" rel="noopener" class="team__link">LinkedIn</a>
+              </div>
+            </div>
+            <div class="card team__card">
+              <div class="team__avatar">A</div>
+              <h3 class="team__name">Andrey</h3>
+              <span class="team__role">Co-founder &amp; Engineering</span>
+              <p class="team__bio">
+                Full-stack engineer. Smart contract and DeFi experience.
+                Building OmniFlow's execution layer and cross-chain operations.
+              </p>
+              <div class="team__links">
+                <a href="https://github.com" target="_blank" rel="noopener" class="team__link">GitHub</a>
+                <a href="https://linkedin.com" target="_blank" rel="noopener" class="team__link">LinkedIn</a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- #9 FAQ -->
+      <section class="section section--alt" id="faq">
+        <div class="container">
+          <span class="section__label">FAQ</span>
+          <h2 class="section__headline">Questions? Answered.</h2>
+          <div class="faq__list" data-animate="fade-up">
+            <details class="faq__item">
+              <summary class="faq__question">Is OmniFlow custodial?</summary>
+              <div class="faq__answer">
+                <p>No. OmniFlow is fully non-custodial. Each user gets an isolated smart account (ERC-4337) that only they control. We never hold funds, private keys, or seed phrases. Your wallet signs every transaction.</p>
+              </div>
+            </details>
+            <details class="faq__item">
+              <summary class="faq__question">Which chains are supported?</summary>
+              <div class="faq__answer">
+                <p>OmniFlow supports 30+ EVM chains including Ethereum, Base, Arbitrum, Optimism, Polygon, Avalanche, and Sonic. We add new chains regularly through our LI.FI and Circle CCTP v2 integrations.</p>
+              </div>
+            </details>
+            <details class="faq__item">
+              <summary class="faq__question">How does gasless work?</summary>
+              <div class="faq__answer">
+                <p>OmniFlow uses Account Abstraction (ERC-4337) with a paymaster. Gas fees are sponsored or deducted from the payment amount — recipients never need native tokens to receive funds.</p>
+              </div>
+            </details>
+            <details class="faq__item">
+              <summary class="faq__question">Is OmniFlow audited?</summary>
+              <div class="faq__answer">
+                <p>We are planning a Trail of Bits audit for Q3 2026. Our smart contracts are open-source and built on audited primitives: ZeroDev Kernel v3.3, Safe modules, and Circle CCTP v2.</p>
+              </div>
+            </details>
+            <details class="faq__item">
+              <summary class="faq__question">What tokens can I send and receive?</summary>
+              <div class="faq__answer">
+                <p>Any ERC-20 token on any supported chain. Senders pay in their preferred token, and recipients receive in theirs. OmniFlow handles cross-chain swaps and bridging automatically via LI.FI.</p>
+              </div>
+            </details>
+            <details class="faq__item">
+              <summary class="faq__question">How do I integrate OmniFlow?</summary>
+              <div class="faq__answer">
+                <p>OmniFlow provides a REST API and dashboard. Upload a CSV of recipients, or integrate programmatically. API keys, webhooks for status updates, and batch operations — all documented at docs.omniflow.dev.</p>
+              </div>
+            </details>
+            <details class="faq__item">
+              <summary class="faq__question">What does it cost?</summary>
+              <div class="faq__answer">
+                <p>OmniFlow charges a small fee per transaction. No monthly subscriptions, no minimum volumes. Free during beta — start building today and only pay when you scale.</p>
+              </div>
+            </details>
+          </div>
+        </div>
+      </section>
+
+      <!-- #10 CTA -->
       <section class="section bg-mesh bg-mesh--cta" id="cta">
         <div class="container cta__container">
           <h2 class="section__headline cta__headline">
             Stop copy-pasting wallet addresses.
           </h2>
           <p class="cta__subtitle">
-            Free 14-day trial. No credit card. First batch in under 5 minutes.
+            One API. Any chain. Any token. Gasless.
           </p>
           <div class="cta__buttons">
             <a
@@ -1433,17 +1776,8 @@
               class="btn btn--primary btn--rotating-border btn--lg"
               >Start Your First Batch</a
             >
-            <a href="#" class="btn btn--ghost btn--lg">Talk to Founders</a>
           </div>
-          <div class="cta__stats">
-            <span>Any chain</span>
-            <span class="cta__dot">&middot;</span>
-            <span>$0 gas</span>
-            <span class="cta__dot">&middot;</span>
-            <span>Non-custodial</span>
-            <span class="cta__dot">&middot;</span>
-            <span>Any token</span>
-          </div>
+          <a href="#" class="cta__subtle-link">Talk to Founders &rarr;</a>
         </div>
       </section>
     </main>
