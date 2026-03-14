@@ -193,8 +193,7 @@
           </h1>
 
           <p class="hero__subtitle">
-            Non-custodial pay-in and pay-out infrastructure.
-            Any token, any chain, one click.
+            The first payment infrastructure where recipients choose their chain, token, and settlement — gasless, non-custodial, one click.
           </p>
 
           <div class="hero__buttons">
@@ -919,78 +918,64 @@
         </div>
       </section>
 
-      <!-- #4 Features -->
-      <section class="section bg-mesh bg-mesh--features" id="features">
-        <div class="container">
-          <span class="section__label">Features</span>
-          <h2 class="section__headline">More than batch payouts.</h2>
-          <p class="section__subtitle">
-            Batch payouts today. Invoicing, recurring payments, and DeFi
-            operations next. One engine, expanding scope.
-          </p>
-          <div class="features__grid" data-animate="stagger">
-            <div class="card features__card" data-tilt>
-              <div class="features__visual">
-                <span class="features__icon">&#127760;</span>
-              </div>
-              <h3 class="features__title">Cross-Chain</h3>
-              <p class="features__text">
-                Stop building separate integrations per chain. One API, 30+
-                EVM chains, automatic bridging via CCTP v2 and LI.FI.
-              </p>
-            </div>
-            <div class="card features__card" data-tilt>
-              <div class="features__visual">
-                <span class="features__icon">&#128230;</span>
-              </div>
-              <h3 class="features__title">Batch Payouts</h3>
-              <p class="features__text">
-                Pay 1,000 recipients in one transaction. Upload CSV, paste
-                from spreadsheet, or connect via API. Any chain mix.
-              </p>
-            </div>
-            <div class="card features__card" data-tilt>
-              <div class="features__visual">
-                <span class="features__icon">&#9889;</span>
-              </div>
-              <h3 class="features__title">Gasless</h3>
-              <p class="features__text">
-                Zero gas pop-ups. Zero failed transactions. Account
-                Abstraction handles everything — one passkey tap to approve.
-              </p>
-            </div>
-            <div class="card features__card" data-tilt>
-              <div class="features__visual">
-                <span class="features__icon">&#128260;</span>
-              </div>
-              <h3 class="features__title">Any Token In/Out</h3>
-              <p class="features__text">
-                Accept USDC, pay out ETH. Any token, any direction. Automatic
-                conversion across chains — recipients get exactly what they want.
-              </p>
-            </div>
-            <div class="card features__card" data-tilt>
-              <div class="features__visual">
-                <span class="features__icon">&#128274;</span>
-              </div>
-              <h3 class="features__title">Non-Custodial</h3>
-              <p class="features__text">
-                Your users keep control. Zero custodial liability for you.
-                Smart accounts with spending limits, time locks, and contract
-                whitelists.
-              </p>
-            </div>
-            <div class="card features__card" data-tilt>
-              <div class="features__visual">
-                <span class="features__icon">&#128203;</span>
-              </div>
-              <h3 class="features__title">Coming Q3</h3>
-              <p class="features__text">
-                Invoicing, recurring payments, and DeFi operations. One engine,
-                expanding scope — from payroll to treasury management.
-              </p>
+      <!-- #4 Features — Split-Screen Accordion -->
+      <section class="section features-accordion" id="features">
+        <div class="features-accordion__inner">
+          <!-- Left: sticky headline -->
+          <div class="features-accordion__sticky">
+            <div class="features-accordion__sticky-inner">
+              <span class="features-accordion__pre">More than</span>
+              <span class="features-accordion__highlight">payments.</span>
             </div>
           </div>
+          <!-- Right: scrolling items -->
+          <div class="features-accordion__scroll">
+            <div class="features-accordion__item" data-feature="0">
+              <h3 class="features-accordion__title">Invoicing</h3>
+              <p class="features-accordion__desc">User pays in any token on any chain. We convert and settle to your preferred token and chain automatically.</p>
+            </div>
+            <div class="features-accordion__sep"></div>
+            <div class="features-accordion__item" data-feature="1">
+              <h3 class="features-accordion__title">Batch Payouts</h3>
+              <p class="features-accordion__desc">Upload CSV or add recipients manually. One-click cross-chain payout in different tokens to different chains.</p>
+            </div>
+            <div class="features-accordion__sep"></div>
+            <div class="features-accordion__item" data-feature="2">
+              <h3 class="features-accordion__title">Non-Custodial</h3>
+              <p class="features-accordion__desc">Funds are always yours — even from the first step of pay-in. We never have access to your money.</p>
+            </div>
+            <div class="features-accordion__sep"></div>
+            <div class="features-accordion__item" data-feature="3">
+              <h3 class="features-accordion__title">Gasless</h3>
+              <p class="features-accordion__desc">Zero gas pop-ups. Zero failed transactions. Account Abstraction handles everything.</p>
+            </div>
+            <div class="features-accordion__sep"></div>
+            <div class="features-accordion__item" data-feature="4">
+              <h3 class="features-accordion__title">Recurring</h3>
+              <p class="features-accordion__desc">Scheduled payouts and subscription pay-ins. Set once, runs automatically.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- #4b Mid-page CTA — Split Screen -->
+      <section class="section mid-cta" id="mid-cta">
+        <div class="mid-cta__inner">
+          <h2 class="mid-cta__headline">Choose your flow</h2>
+
+          <a href="/app/" class="mid-cta__side mid-cta__side--left">
+            <div class="mid-cta__content">
+              <h3 class="mid-cta__title">Get paid in crypto</h3>
+              <span class="mid-cta__label">Create Invoice</span>
+            </div>
+          </a>
+
+          <a href="/app/" class="mid-cta__side mid-cta__side--right">
+            <div class="mid-cta__content">
+              <h3 class="mid-cta__title">Pay anyone, anywhere</h3>
+              <span class="mid-cta__label mid-cta__label--purple">Start Payout</span>
+            </div>
+          </a>
         </div>
       </section>
 

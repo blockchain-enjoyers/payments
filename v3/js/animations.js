@@ -392,6 +392,38 @@
     }
   }
 
+  // ── Mid-page CTA: split screen entrance ──
+  function initMidCta() {
+    var section = document.getElementById("mid-cta");
+    if (!section) return;
+    var left = section.querySelector(".mid-cta__side--left");
+    var right = section.querySelector(".mid-cta__side--right");
+
+    gsap.from(left, {
+      x: -80,
+      opacity: 0,
+      duration: 1,
+      ease: "power2.out",
+      scrollTrigger: {
+        trigger: section,
+        start: "top 75%",
+        toggleActions: "play none none none",
+      },
+    });
+
+    gsap.from(right, {
+      x: 80,
+      opacity: 0,
+      duration: 1,
+      ease: "power2.out",
+      scrollTrigger: {
+        trigger: section,
+        start: "top 75%",
+        toggleActions: "play none none none",
+      },
+    });
+  }
+
   // ── Section snap (magnetic scroll between full-screen sections) ──
   function initSectionSnap() {
     if (isMobile) return;
@@ -443,6 +475,7 @@
     initProblemWall();          // PIN #1: +700% scroll space
     initIsometricScroll();      // PIN #2: +200% scroll space
     initFeaturesAccordion();    // PIN #3: after all space is added
+    initMidCta();               // No pin, just scroll-triggered entrance
     // initSectionSnap();
     ScrollTrigger.refresh();
   }

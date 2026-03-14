@@ -304,6 +304,12 @@
   animation: floatB 2.9s ease-in-out infinite 0.9s;
 }
 
+/* Scroll-driven tokens */
+.scroll-token {
+  pointer-events: none;
+  will-change: transform, opacity;
+}
+
 /* Dash flow animation */
 @keyframes dashFlow {
   to {
