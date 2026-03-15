@@ -62,6 +62,7 @@
 
 /* Theme toggle button */
 .theme-toggle {
+  display: none; /* Light theme disabled for now */
   background: none;
   border: none;
   color: var(--color-text-secondary);
@@ -240,6 +241,7 @@
   flex: 0 0 60%;
   max-width: 800px;
   text-align: left;
+  position: relative;
 }
 
 .hero__visual {
@@ -254,7 +256,7 @@
 
 .hero__headline {
   font-family: var(--font-display);
-  font-size: clamp(2rem, 6vw, 4rem);
+  font-size: clamp(2.5rem, 6vw, 5rem);
   font-weight: 700;
   line-height: 1.1;
   letter-spacing: -0.03em;
@@ -852,22 +854,23 @@
 
 .features-accordion__sticky-inner {
   text-align: left;
+  position: relative;
 }
 
 .features-accordion__pre {
   display: block;
   font-family: var(--font-display);
-  font-size: clamp(3rem, 6vw, 6rem);
+  font-size: clamp(2.5rem, 6vw, 5rem);
   font-weight: 700;
   line-height: 1.1;
   letter-spacing: -0.03em;
-  color: #7c7e8a;
+  color: var(--color-text-primary);
 }
 
 .features-accordion__highlight {
   display: block;
   font-family: var(--font-display);
-  font-size: clamp(3rem, 6vw, 6rem);
+  font-size: clamp(2.5rem, 6vw, 5rem);
   font-weight: 700;
   line-height: 1.1;
   letter-spacing: -0.03em;
@@ -1038,20 +1041,6 @@
   z-index: 1;
 }
 
-/* Headline glow */
-.security-hero__glow {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 600px;
-  height: 300px;
-  background: radial-gradient(ellipse, rgba(24, 148, 232, 0.12) 0%, rgba(159, 114, 255, 0.06) 40%, transparent 70%);
-  border-radius: 50%;
-  pointer-events: none;
-  filter: blur(40px);
-  z-index: 0;
-}
 
 @media (max-width: 767px) {
   .security-hero__h2 {
@@ -1065,6 +1054,20 @@
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
+}
+
+.section-headline-glow {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 600px;
+  height: 300px;
+  background: radial-gradient(ellipse, rgba(24, 148, 232, 0.12) 0%, rgba(159, 114, 255, 0.06) 40%, transparent 70%);
+  border-radius: 50%;
+  pointer-events: none;
+  filter: blur(40px);
+  z-index: 0;
 }
 
 /* Pills bar */
@@ -1303,20 +1306,6 @@
   z-index: 1;
 }
 
-.integrations-hero__glow {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 600px;
-  height: 300px;
-  background: radial-gradient(ellipse, rgba(24, 148, 232, 0.1) 0%, rgba(159, 114, 255, 0.05) 40%, transparent 70%);
-  border-radius: 50%;
-  pointer-events: none;
-  filter: blur(40px);
-  z-index: 0;
-}
-
 /* Partner cards */
 .integrations-cards {
   display: grid;
@@ -1549,46 +1538,14 @@
   text-align: center;
   position: relative;
   z-index: 1;
-  padding-top: var(--space-16);
-  padding-bottom: var(--space-16);
+  padding-top: 120px;
+  padding-bottom: 120px;
 }
 
 .cta__headline {
-  font-size: clamp(1.75rem, 5vw, 3rem);
-}
-
-.cta__subtitle {
-  font-size: clamp(1rem, 2vw, 1.25rem);
-  color: var(--color-text-secondary);
-  max-width: 500px;
-  margin: var(--space-4) auto var(--space-8);
-}
-
-.cta__buttons {
-  display: flex;
-  justify-content: center;
-  gap: var(--space-4);
-  flex-wrap: wrap;
+  font-size: clamp(2.5rem, 6vw, 5rem);
+  letter-spacing: -0.03em;
   margin-bottom: var(--space-8);
-}
-
-.btn--lg {
-  padding: 1rem 2.5rem;
-  font-size: 1rem;
-}
-
-.cta__stats {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: var(--space-2);
-  flex-wrap: wrap;
-  font-size: 0.875rem;
-  color: var(--color-text-secondary);
-}
-
-.cta__dot {
-  color: var(--color-border);
 }
 
 /* ── Footer (#16) ── */
@@ -2106,16 +2063,13 @@
   transform: translate(-50%, calc(-100% - 0.5em));
   z-index: 3;
   text-align: center;
-  font-size: clamp(2.4rem, 6vw, 4rem);
+  font-size: clamp(2.5rem, 6vw, 5rem);
   font-weight: 700;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.03em;
   margin: 0;
   pointer-events: none;
   white-space: nowrap;
-  background: linear-gradient(90deg, var(--color-primary), var(--color-purple));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: var(--color-text-primary);
 }
 
 /* ── Title ── */

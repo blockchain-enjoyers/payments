@@ -196,7 +196,7 @@
   inset: -1px;
   border-radius: var(--radius-pill);
   padding: 1px;
-  background: linear-gradient(135deg, #9f72ff, #1894e8, #62e2a4);
+  background: linear-gradient(135deg, #1894e8, #9f72ff);
   -webkit-mask:
     linear-gradient(#fff 0 0) content-box,
     linear-gradient(#fff 0 0);

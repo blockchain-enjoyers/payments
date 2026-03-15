@@ -122,7 +122,7 @@
       </ul>
 
       <div class="nav__actions">
-        <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">
+        <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme" hidden style="display:none !important">
           <svg
             class="theme-toggle__icon--dark"
             viewBox="0 0 24 24"
@@ -188,12 +188,13 @@
             1st Place "Best DeFi Composer" — ETHGlobal 2026
           </div>
 
+          <div class="section-headline-glow"></div>
           <h1 class="hero__headline">
-            Receiver-first<br />cross-chain payments.
+            Receiver-first<br />cross-chain <span class="gradient-text">payments.</span>
           </h1>
 
           <p class="hero__subtitle">
-            The first payment infrastructure where recipients choose their chain, token, and settlement — gasless, non-custodial, one click.
+            Pay and get paid in crypto. Any token, any chain, one click.
           </p>
 
           <div class="hero__buttons">
@@ -439,7 +440,7 @@
               </defs>
 
               <!-- Source Cards (Left) -->
-              <!-- Treasury -->
+              <!-- Invoice -->
               <g
                 class="float-a source-card"
                 data-group="src1"
@@ -469,49 +470,26 @@
                   stroke="#2A2D37"
                   stroke-width="0.5"
                 />
-                <rect
-                  x="16"
-                  y="18"
-                  width="24"
-                  height="18"
-                  rx="3"
-                  fill="none"
-                  stroke="#7C7E8A"
-                  stroke-width="1.5"
-                />
-                <rect
-                  x="28"
-                  y="24"
-                  width="8"
-                  height="6"
-                  rx="2"
-                  fill="#7C7E8A"
-                />
-                <circle cx="33" cy="27" r="1.5" fill="#1A1D27" />
+                <!-- Invoice icon: document with lines -->
+                <rect x="16" y="18" width="20" height="24" rx="2" fill="none" stroke="#7C7E8A" stroke-width="1.5"/>
+                <polyline points="28,18 28,24 36,24" fill="none" stroke="#7C7E8A" stroke-width="1.5"/>
+                <line x1="20" y1="29" x2="32" y2="29" stroke="#7C7E8A" stroke-width="1" opacity="0.6"/>
+                <line x1="20" y1="33" x2="30" y2="33" stroke="#7C7E8A" stroke-width="1" opacity="0.6"/>
+                <line x1="20" y1="37" x2="28" y2="37" stroke="#7C7E8A" stroke-width="1" opacity="0.6"/>
                 <text
                   x="90"
-                  y="27"
+                  y="35"
                   text-anchor="middle"
                   fill="#E4E5EA"
                   font-size="13"
                   font-weight="600"
                   font-family="Sora, sans-serif"
                 >
-                  Treasury
-                </text>
-                <text
-                  x="90"
-                  y="44"
-                  text-anchor="middle"
-                  fill="#7C7E8A"
-                  font-size="10"
-                  font-family="Sora, sans-serif"
-                >
-                  Multi-sig
+                  Invoice
                 </text>
               </g>
 
-              <!-- Payroll CSV -->
+              <!-- Recurring -->
               <g
                 class="float-b source-card"
                 data-group="src2"
@@ -541,73 +519,23 @@
                   stroke="#2A2D37"
                   stroke-width="0.5"
                 />
-                <rect
-                  x="16"
-                  y="16"
-                  width="20"
-                  height="26"
-                  rx="2"
-                  fill="none"
-                  stroke="#7C7E8A"
-                  stroke-width="1.5"
-                />
-                <polyline
-                  points="28,16 28,22 36,22"
-                  fill="none"
-                  stroke="#7C7E8A"
-                  stroke-width="1.5"
-                />
-                <line
-                  x1="20"
-                  y1="28"
-                  x2="32"
-                  y2="28"
-                  stroke="#7C7E8A"
-                  stroke-width="1"
-                  opacity="0.6"
-                />
-                <line
-                  x1="20"
-                  y1="32"
-                  x2="30"
-                  y2="32"
-                  stroke="#7C7E8A"
-                  stroke-width="1"
-                  opacity="0.6"
-                />
-                <line
-                  x1="20"
-                  y1="36"
-                  x2="28"
-                  y2="36"
-                  stroke="#7C7E8A"
-                  stroke-width="1"
-                  opacity="0.6"
-                />
+                <!-- Recurring icon: clock -->
+                <circle cx="26" cy="30" r="10" fill="none" stroke="#7C7E8A" stroke-width="1.5"/>
+                <polyline points="26,24 26,30 31,33" fill="none" stroke="#7C7E8A" stroke-width="1.5" stroke-linecap="round"/>
                 <text
                   x="90"
-                  y="27"
+                  y="35"
                   text-anchor="middle"
                   fill="#E4E5EA"
                   font-size="13"
                   font-weight="600"
                   font-family="Sora, sans-serif"
                 >
-                  Payroll CSV
-                </text>
-                <text
-                  x="90"
-                  y="44"
-                  text-anchor="middle"
-                  fill="#7C7E8A"
-                  font-size="10"
-                  font-family="Sora, sans-serif"
-                >
-                  Batch upload
+                  Recurring
                 </text>
               </g>
 
-              <!-- DAO Fund -->
+              <!-- Multisig -->
               <g
                 class="float-c source-card"
                 data-group="src3"
@@ -637,56 +565,21 @@
                   stroke="#2A2D37"
                   stroke-width="0.5"
                 />
-                <circle
-                  cx="22"
-                  cy="22"
-                  r="5"
-                  fill="none"
-                  stroke="#7C7E8A"
-                  stroke-width="1.5"
-                />
-                <path
-                  d="M 14 38 Q 14 30 22 30 Q 30 30 30 38"
-                  fill="none"
-                  stroke="#7C7E8A"
-                  stroke-width="1.5"
-                />
-                <circle
-                  cx="34"
-                  cy="24"
-                  r="3.5"
-                  fill="none"
-                  stroke="#7C7E8A"
-                  stroke-width="1"
-                  opacity="0.6"
-                />
-                <path
-                  d="M 29 36 Q 30 30 34 30 Q 40 30 40 36"
-                  fill="none"
-                  stroke="#7C7E8A"
-                  stroke-width="1"
-                  opacity="0.6"
-                />
+                <!-- Multisig icon: two people -->
+                <circle cx="22" cy="24" r="5" fill="none" stroke="#7C7E8A" stroke-width="1.5"/>
+                <path d="M 14 40 Q 14 32 22 32 Q 30 32 30 40" fill="none" stroke="#7C7E8A" stroke-width="1.5"/>
+                <circle cx="34" cy="26" r="3.5" fill="none" stroke="#7C7E8A" stroke-width="1" opacity="0.6"/>
+                <path d="M 29 38 Q 30 32 34 32 Q 40 32 40 38" fill="none" stroke="#7C7E8A" stroke-width="1" opacity="0.6"/>
                 <text
                   x="90"
-                  y="27"
+                  y="35"
                   text-anchor="middle"
                   fill="#E4E5EA"
                   font-size="13"
                   font-weight="600"
                   font-family="Sora, sans-serif"
                 >
-                  DAO Fund
-                </text>
-                <text
-                  x="90"
-                  y="44"
-                  text-anchor="middle"
-                  fill="#7C7E8A"
-                  font-size="10"
-                  font-family="Sora, sans-serif"
-                >
-                  Governance
+                  Multisig
                 </text>
               </g>
 
@@ -811,10 +704,7 @@
                 <polygon points="140,0 140,56 150,44 150,-12" fill="#222530" stroke="#2A2D37" stroke-width="0.5" />
                 <text x="16" y="22" fill="#E4E5EA" font-size="12" font-weight="600" font-family="Sora, sans-serif">alice.eth</text>
                 <text x="16" y="40" fill="#0052FF" font-size="10" font-weight="500" font-family="Sora, sans-serif">Base</text>
-                <!-- Base chain icon -->
-                <circle cx="120" cy="28" r="12" fill="#0052FF" opacity="0.2" />
-                <circle cx="120" cy="28" r="8" fill="#0052FF" />
-                <path d="M 120 20 L 120 36 M 113 28 L 127 28" stroke="white" stroke-width="1.5" fill="none" opacity="0.9" />
+                <image href="assets/chains/base.svg" x="108" y="16" width="24" height="24"/>
               </g>
 
               <!-- bob.eth / Arbitrum -->
@@ -829,10 +719,7 @@
                 <polygon points="140,0 140,56 150,44 150,-12" fill="#222530" stroke="#2A2D37" stroke-width="0.5" />
                 <text x="16" y="22" fill="#E4E5EA" font-size="12" font-weight="600" font-family="Sora, sans-serif">bob.eth</text>
                 <text x="16" y="40" fill="#28A0F0" font-size="10" font-weight="500" font-family="Sora, sans-serif">Arbitrum</text>
-                <!-- Arbitrum chain icon (stylized A) -->
-                <circle cx="120" cy="28" r="12" fill="#28A0F0" opacity="0.2" />
-                <circle cx="120" cy="28" r="8" fill="#1B4ADD" />
-                <path d="M 115 34 L 120 21 L 125 34 M 116.5 31 L 123.5 31" stroke="white" stroke-width="1.2" fill="none" stroke-linecap="round" />
+                <image href="assets/chains/arb.svg" x="108" y="16" width="24" height="24"/>
               </g>
 
               <!-- carol.eth / Ethereum -->
@@ -847,10 +734,7 @@
                 <polygon points="140,0 140,56 150,44 150,-12" fill="#222530" stroke="#2A2D37" stroke-width="0.5" />
                 <text x="16" y="22" fill="#E4E5EA" font-size="12" font-weight="600" font-family="Sora, sans-serif">carol.eth</text>
                 <text x="16" y="40" fill="#627EEA" font-size="10" font-weight="500" font-family="Sora, sans-serif">Ethereum</text>
-                <!-- Ethereum diamond icon -->
-                <circle cx="120" cy="28" r="12" fill="#627EEA" opacity="0.2" />
-                <path d="M 120 18 L 127 28 L 120 38 L 113 28 Z" fill="#627EEA" />
-                <path d="M 120 18 L 127 28 L 120 25 L 113 28 Z" fill="white" opacity="0.4" />
+                <image href="assets/chains/eth_chain.svg" x="108" y="16" width="24" height="24"/>
               </g>
 
               <!-- dave.eth / Optimism -->
@@ -865,10 +749,7 @@
                 <polygon points="140,0 140,56 150,44 150,-12" fill="#222530" stroke="#2A2D37" stroke-width="0.5" />
                 <text x="16" y="22" fill="#E4E5EA" font-size="12" font-weight="600" font-family="Sora, sans-serif">dave.eth</text>
                 <text x="16" y="40" fill="#FF0420" font-size="10" font-weight="500" font-family="Sora, sans-serif">Optimism</text>
-                <!-- Optimism icon (red circle + OP) -->
-                <circle cx="120" cy="28" r="12" fill="#FF0420" opacity="0.2" />
-                <circle cx="120" cy="28" r="8" fill="#FF0420" />
-                <text x="120" y="32" text-anchor="middle" fill="white" font-size="9" font-weight="700" font-family="Sora, sans-serif">OP</text>
+                <image href="assets/chains/optimism.svg" x="108" y="16" width="24" height="24"/>
               </g>
 
               <!-- eve.eth / Avalanche -->
@@ -883,10 +764,7 @@
                 <polygon points="140,0 140,56 150,44 150,-12" fill="#222530" stroke="#2A2D37" stroke-width="0.5" />
                 <text x="16" y="22" fill="#E4E5EA" font-size="12" font-weight="600" font-family="Sora, sans-serif">eve.eth</text>
                 <text x="16" y="40" fill="#E84142" font-size="10" font-weight="500" font-family="Sora, sans-serif">Avalanche</text>
-                <!-- Avalanche icon (red circle + triangle) -->
-                <circle cx="120" cy="28" r="12" fill="#E84142" opacity="0.2" />
-                <circle cx="120" cy="28" r="8" fill="#E84142" />
-                <path d="M 120 21 L 126 34 L 114 34 Z" fill="white" opacity="0.9" />
+                <image href="assets/chains/avalanche.svg" x="108" y="16" width="24" height="24"/>
               </g>
 
               <!-- Tokens in front of sphere (rendered after sphere = visually on top) -->
@@ -924,6 +802,7 @@
           <!-- Left: sticky headline -->
           <div class="features-accordion__sticky">
             <div class="features-accordion__sticky-inner">
+              <div class="section-headline-glow"></div>
               <span class="features-accordion__pre">More than</span>
               <span class="features-accordion__highlight">payments.</span>
             </div>
@@ -961,7 +840,8 @@
       <!-- #4b Mid-page CTA — Split Screen -->
       <section class="section mid-cta" id="mid-cta">
         <div class="mid-cta__inner">
-          <h2 class="mid-cta__headline">Choose your flow</h2>
+          <div class="section-headline-glow"></div>
+          <h2 class="mid-cta__headline">Choose your <span class="gradient-text">flow</span></h2>
 
           <a href="/app/" class="mid-cta__side mid-cta__side--left">
             <div class="mid-cta__content">
@@ -982,7 +862,7 @@
       <!-- #5 Security -->
       <section class="section section--alt" id="security">
         <div class="security-hero" data-animate="fade-up">
-          <div class="security-hero__glow"></div>
+          <div class="section-headline-glow"></div>
           <span class="section__label">Security</span>
           <h2 class="security-hero__h2">Enterprise-grade<br><span class="gradient-text">security.</span></h2>
         </div>
@@ -1044,7 +924,7 @@
       <!-- #6 Integrations -->
       <section class="section" id="integrations">
         <div class="integrations-hero" data-animate="fade-up">
-          <div class="integrations-hero__glow"></div>
+          <div class="section-headline-glow"></div>
           <h2 class="integrations-hero__h2">Powered by<br><span class="gradient-text">the best.</span></h2>
         </div>
 
@@ -1106,6 +986,7 @@
       <!-- #9 FAQ -->
       <section class="section section--alt" id="faq">
         <div class="faq-hero" data-animate="fade-up">
+          <div class="section-headline-glow"></div>
           <h2 class="faq-hero__h2">Questions?<br><span class="gradient-text">Answered.</span></h2>
         </div>
 
@@ -1142,20 +1023,14 @@
       <!-- #10 CTA -->
       <section class="section bg-mesh bg-mesh--cta" id="cta">
         <div class="container cta__container">
-          <h2 class="section__headline cta__headline">
-            Stop copy-pasting wallet addresses.
+          <div class="section-headline-glow"></div>
+          <h2 class="section__headline cta__headline" data-animate="fade-up">
+            Never think about<br />
+            <span class="gradient-text">payments</span> again.
           </h2>
-          <p class="cta__subtitle">
-            One API. Any chain. Any token. Gasless.
-          </p>
-          <div class="cta__buttons">
-            <a
-              href="/app/"
-              class="btn btn--primary btn--rotating-border btn--lg"
-              >Start Your First Batch</a
-            >
-          </div>
-          <a href="#" class="cta__subtle-link">Talk to Founders &rarr;</a>
+          <a href="/app/" class="btn btn--primary btn--lg" data-animate="fade-up"
+            >Try OmniFlow</a
+          >
         </div>
       </section>
     </main>
@@ -1166,7 +1041,7 @@
         <div class="footer__brand">
           <span class="footer__logo">OmniFlow</span>
           <p class="footer__tagline">
-            The cross-chain payment engine for crypto teams.
+            The cross-chain payments engine.
           </p>
         </div>
         <div class="footer__links">
@@ -1185,9 +1060,6 @@
           <a href="https://ethglobal.com" target="_blank" rel="noopener"
             >ETHGlobal</a
           >
-        </div>
-        <div class="footer__tech">
-          Built on ZeroDev + Circle CCTP v2 + LI.FI + Pimlico
         </div>
         <div class="footer__legal">
           <span>&copy; 2026 OmniFlow</span>

@@ -14,18 +14,8 @@
     window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
   function initTheme() {
-    const saved = localStorage.getItem(THEME_KEY);
-    if (saved) {
-      document.documentElement.setAttribute("data-theme", saved);
-    } else {
-      const prefersDark = window.matchMedia(
-        "(prefers-color-scheme: dark)",
-      ).matches;
-      document.documentElement.setAttribute(
-        "data-theme",
-        prefersDark ? "dark" : "light",
-      );
-    }
+    // Light theme disabled for now — force dark
+    document.documentElement.setAttribute("data-theme", "dark");
   }
 
   function toggleTheme() {
