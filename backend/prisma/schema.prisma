@@ -162,6 +162,7 @@ enum StepType {
   MINT
   TRANSFER
   LIFI_SWAP
+  SWAP_TO_USDC
 }
 
 enum StepStatus {

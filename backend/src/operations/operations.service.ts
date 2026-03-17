@@ -5,7 +5,7 @@ import {
   Logger,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { parseUnits, formatUnits } from 'viem';
+import { parseUnits, formatUnits, encodeFunctionData, erc20Abi } from 'viem';
 import { PrismaService } from '../common/prisma/prisma.service';
 import { CircleService } from '../circle/circle.service';
 import { GatewayService } from '../circle/gateway/gateway.service';
@@ -17,6 +17,9 @@ import {
   GATEWAY_CHAINS,
   HUB_CHAIN,
   getUsdcAddress,
+  getTokenAddress,
+  getTokenInfo,
+  getTokenByAddress,
 } from '../circle/config/chains';
 import { USDC_DECIMALS } from '../circle/gateway/gateway.types';
 import { PrepareCollectDto } from './dto/prepare-collect.dto';
@@ -58,8 +61,8 @@ export class OperationsService {
       this.validateGatewayChain(chain);
     }
 
-    // Read on-chain USDC balances (wallet balance, NOT Gateway balance)
-    // Collect deposits on-chain USDC to Gateway first, then burns to destination
+    // Read on-chain balances (multi-token per chain)
+    // Collect only cares about USDC for Gateway deposits
     const onChainBalances =
       await this.circleService.getMultiChainBalances(user.walletAddress);
 
@@ -71,10 +74,14 @@ export class OperationsService {
     let totalBurnAmount = 0n;
 
     for (const chain of dto.sourceChains) {
-      const onChainBalance = onChainBalances[chain] || 0n;
+      const chainTokens = onChainBalances[chain];
+      const usdcInfo = chainTokens?.USDC;
+      const onChainBalance = usdcInfo
+        ? BigInt(Math.floor(parseFloat(usdcInfo.balance) * 1e6))
+        : 0n;
       if (onChainBalance > 0n) {
         // Deposit full on-chain balance, burn net amount (leaves room for Gateway fee)
-        const burnAmount = netBurnAmount(onChainBalance);
+        const burnAmount = netBurnAmount(onChainBalance, chain);
         sources.push({ chain, depositAmount: onChainBalance, burnAmount });
         totalBurnAmount += burnAmount;
       }
@@ -276,7 +283,7 @@ export class OperationsService {
 
     // If source chain is already the hub, no burn/mint needed
     const needsBurnMint = chainKey !== HUB_CHAIN;
-    const burnAmount = needsBurnMint ? netBurnAmount(depositAmount) : 0n;
+    const burnAmount = needsBurnMint ? netBurnAmount(depositAmount, chainKey) : 0n;
 
     const operation = await this.prisma.operation.create({
       data: {
@@ -398,13 +405,25 @@ export class OperationsService {
 
     this.validateGatewayChain(sourceChain);
 
+    // Resolve source token from address (defaults to USDC)
+    const usdcAddress = getUsdcAddress(sourceChain);
+    const sourceTokenAddress = dto.sourceToken || usdcAddress;
+    const sourceTokenInfo = getTokenByAddress(sourceTokenAddress, sourceChain);
+    if (!sourceTokenInfo) {
+      throw new BadRequestException(`Unknown token ${sourceTokenAddress} on ${sourceChain}`);
+    }
+    const sourceTokenSymbol = sourceTokenInfo.symbol;
+    const sourceDecimals = sourceTokenInfo.decimals;
+    const isSourceUsdc = sourceTokenAddress.toLowerCase() === usdcAddress.toLowerCase();
+
     // Normalize recipients: if address is omitted, use walletAddress (bridge to self)
     const recipients = dto.recipients.map((r) => {
       this.validateGatewayChain(r.chain);
       return {
         ...r,
         address: r.address || user.walletAddress,
-        amountRaw: parseUnits(r.amount, USDC_DECIMALS),
+        amountRaw: parseUnits(r.amount, sourceDecimals),
+        amountUsdcRaw: parseUnits(r.amount, USDC_DECIMALS), // for Gateway (always 6 dec)
       };
     });
 
@@ -413,49 +432,62 @@ export class OperationsService {
     const isBridge = isSingle && recipients[0].address === user.walletAddress;
     const opType = isBridge ? 'BRIDGE' : isSingle ? 'SEND' : 'BATCH_SEND';
 
-    // Calculate totals and fee
+    // Calculate totals and fee (in source token decimals)
     let totalRaw = 0n;
     for (const r of recipients) totalRaw += r.amountRaw;
 
     const feePercent = isBridge || !isSingle ? BATCH_FEE_PERCENT : CROSS_CHAIN_FEE_PERCENT;
 
-    // Check if any recipient is internal (same chain as hub)
-    const allInternal = recipients.every(
-      (r) => sourceChain === r.chain && sourceChain === HUB_CHAIN,
-    );
-    const actualFeePercent = allInternal ? '0' : feePercent;
-    const feeRaw = allInternal
+    // Check if all sends are same-chain
+    const allSameChain = recipients.every((r) => sourceChain === r.chain);
+    const allInternal = allSameChain && sourceChain === HUB_CHAIN;
+    const actualFeePercent = allSameChain ? '0' : feePercent;
+    const feeRaw = allSameChain
       ? 0n
-      : (totalRaw * BigInt(Math.round(parseFloat(actualFeePercent) * 10000))) / 10000n;
+      : (totalRaw * BigInt(Math.round(parseFloat(actualFeePercent) * 100))) / 10000n;
 
-    // Check if auto-deposit to Gateway is needed for cross-chain sends
-    const crossChainTotal = recipients
-      .filter((r) => !(sourceChain === r.chain && sourceChain === HUB_CHAIN))
-      .reduce((sum, r) => sum + r.amountRaw, 0n);
+    // Check source token balance
+    const onChainSourceBalance = await this.gatewayService.getTokenBalance(
+      sourceChain, sourceTokenAddress, user.walletAddress,
+    );
+    if (onChainSourceBalance < totalRaw + feeRaw) {
+      throw new BadRequestException(
+        `Insufficient ${sourceTokenSymbol} on ${sourceChain}: have ${formatUnits(onChainSourceBalance, sourceDecimals)}, need ${formatUnits(totalRaw + feeRaw, sourceDecimals)}`,
+      );
+    }
+
+    // Cross-chain: needs Gateway (USDC only). If source is not USDC, swap first.
+    const crossChainRecipients = recipients.filter((r) => sourceChain !== r.chain);
+    const crossChainTotal = crossChainRecipients.reduce((sum, r) => sum + r.amountUsdcRaw, 0n);
 
     let needsDeposit = false;
     let depositAmount = 0n;
+    let needsSwapToUsdc = !isSourceUsdc && crossChainTotal > 0n;
 
     if (crossChainTotal > 0n) {
-      const requiredBalance = grossDepositAmount(crossChainTotal);
+      const requiredBalance = grossDepositAmount(crossChainTotal, sourceChain);
       const gatewayBalances = await this.gatewayService.getBalance(user.walletAddress);
       const gatewayBalance =
         gatewayBalances.find((b) => b.chain === sourceChain)?.balance ?? 0n;
 
       if (gatewayBalance < requiredBalance) {
         const shortfall = requiredBalance - gatewayBalance;
-        const onChainBalance = await this.gatewayService.getOnChainBalance(
-          sourceChain, user.walletAddress,
-        );
 
-        if (onChainBalance + gatewayBalance < requiredBalance) {
-          const maxBurn = netBurnAmount(onChainBalance + gatewayBalance);
-          throw new BadRequestException(
-            `Insufficient USDC on ${sourceChain}: on-chain ${formatUnits(onChainBalance, USDC_DECIMALS)} + Gateway ${formatUnits(gatewayBalance, USDC_DECIMALS)} = ${formatUnits(onChainBalance + gatewayBalance, USDC_DECIMALS)} USDC, need ~${formatUnits(requiredBalance, USDC_DECIMALS)} USDC. Max sendable: ~${formatUnits(maxBurn, USDC_DECIMALS)} USDC`,
+        if (isSourceUsdc) {
+          // Check on-chain USDC balance for deposit
+          const onChainUsdc = await this.gatewayService.getOnChainBalance(
+            sourceChain, user.walletAddress,
           );
+          if (onChainUsdc + gatewayBalance < requiredBalance) {
+            throw new BadRequestException(
+              `Insufficient USDC on ${sourceChain} for cross-chain: on-chain ${formatUnits(onChainUsdc, USDC_DECIMALS)} + Gateway ${formatUnits(gatewayBalance, USDC_DECIMALS)} = ${formatUnits(onChainUsdc + gatewayBalance, USDC_DECIMALS)} USDC, need ~${formatUnits(requiredBalance, USDC_DECIMALS)} USDC`,
+            );
+          }
+          depositAmount = onChainUsdc < shortfall ? onChainUsdc : shortfall;
+        } else {
+          // Will swap sourceToken → USDC, then deposit
+          depositAmount = shortfall;
         }
-
-        depositAmount = onChainBalance < shortfall ? onChainBalance : shortfall;
         needsDeposit = true;
       }
     }
@@ -468,14 +500,18 @@ export class OperationsService {
         chain: r.chain,
         amount: r.amount,
       })),
-      totalAmount: formatUnits(totalRaw, USDC_DECIMALS),
-      fee: formatUnits(feeRaw, USDC_DECIMALS),
+      totalAmount: formatUnits(totalRaw, sourceDecimals),
+      sourceToken: sourceTokenSymbol,
+      fee: formatUnits(feeRaw, sourceDecimals),
       feePercent: actualFeePercent,
-      totalDeducted: formatUnits(totalRaw + feeRaw, USDC_DECIMALS),
+      totalDeducted: formatUnits(totalRaw + feeRaw, sourceDecimals),
       sourceChain,
       needsDeposit,
+      needsSwapToUsdc,
       depositAmount: needsDeposit ? formatUnits(depositAmount, USDC_DECIMALS) : undefined,
-      estimatedTime: allInternal ? 'instant' : needsDeposit ? '15-25 minutes' : '3-5 minutes',
+      estimatedTime: allSameChain
+        ? (needsSwapToUsdc ? '1-2 minutes' : 'instant')
+        : needsDeposit ? '15-25 minutes' : '3-5 minutes',
     };
 
     const operation = await this.prisma.operation.create({
@@ -490,9 +526,10 @@ export class OperationsService {
             amount: r.amount,
           })),
           sourceChain,
+          sourceToken: sourceTokenSymbol,
         },
         summary,
-        feeAmount: formatUnits(feeRaw, USDC_DECIMALS),
+        feeAmount: formatUnits(feeRaw, sourceDecimals),
         feePercent: actualFeePercent,
       },
     });
@@ -500,7 +537,52 @@ export class OperationsService {
     const signRequests: any[] = [];
     let stepIndex = 0;
 
-    // Delegate + deposit setup (shared for all recipients)
+    // ── Step: Swap sourceToken → USDC (if cross-chain and source is not USDC) ──
+    if (needsSwapToUsdc) {
+      const chainConfig = ALL_CHAINS[sourceChain];
+      const usdcAddress = getUsdcAddress(sourceChain);
+      const swapAmount = crossChainTotal; // amount needed in USDC for cross-chain
+      // Convert to source token decimals
+      const swapAmountSource = sourceDecimals > USDC_DECIMALS
+        ? swapAmount * (10n ** BigInt(sourceDecimals - USDC_DECIMALS))
+        : swapAmount / (10n ** BigInt(USDC_DECIMALS - sourceDecimals));
+      const swapSlippage = effectiveSwapSlippage(swapAmountSource, undefined);
+
+      const swapQuote = await this.lifiService.getQuote({
+        fromChain: chainConfig.chainId,
+        toChain: chainConfig.chainId,
+        fromToken: sourceTokenAddress,
+        toToken: usdcAddress,
+        fromAmount: swapAmountSource.toString(),
+        fromAddress: user.walletAddress,
+        toAddress: user.walletAddress,
+        slippage: swapSlippage,
+      });
+
+      const swapCalls = this.lifiService.buildSwapCalls(
+        swapQuote, sourceTokenAddress, swapAmountSource,
+      );
+      const swapStep = await this.prisma.operationStep.create({
+        data: {
+          operationId: operation.id,
+          stepIndex: stepIndex++,
+          chain: sourceChain,
+          type: 'SWAP_TO_USDC',
+          status: 'AWAITING_SIGNATURE',
+          callData: swapCalls.map((c) => ({ to: c.to, data: c.data, value: c.value?.toString() })),
+        },
+      });
+
+      signRequests.push({
+        stepId: swapStep.id,
+        chain: sourceChain,
+        type: 'SWAP_TO_USDC',
+        calls: swapCalls.map((c) => ({ to: c.to, data: c.data })),
+        description: `Swap ${formatUnits(swapAmountSource, sourceDecimals)} ${sourceTokenSymbol} → USDC on ${sourceChain}`,
+      });
+    }
+
+    // ── Step: Delegate + deposit (shared for all cross-chain recipients) ──
     const delegateNeeded =
       crossChainTotal > 0n &&
       (await getChainsNeedingDelegate(this.gatewayService,
@@ -519,7 +601,7 @@ export class OperationsService {
           stepIndex: stepIndex++,
           chain: sourceChain,
           type: 'APPROVE_AND_DEPOSIT',
-          status: 'AWAITING_SIGNATURE',
+          status: needsSwapToUsdc ? 'PENDING' : 'AWAITING_SIGNATURE',
           callData: allCalls.map((c) => ({ to: c.to, data: c.data, value: c.value?.toString() })),
         },
       });
@@ -528,13 +610,23 @@ export class OperationsService {
         ? `Add delegate + deposit ${formatUnits(depositAmount, USDC_DECIMALS)} USDC on ${sourceChain}`
         : `Approve and deposit ${formatUnits(depositAmount, USDC_DECIMALS)} USDC on ${sourceChain}`;
 
-      signRequests.push({
-        stepId: depositStep.id,
-        chain: sourceChain,
-        type: 'APPROVE_AND_DEPOSIT',
-        calls: allCalls.map((c) => ({ to: c.to, data: c.data })),
-        description: desc,
-      });
+      if (!needsSwapToUsdc) {
+        signRequests.push({
+          stepId: depositStep.id,
+          chain: sourceChain,
+          type: 'APPROVE_AND_DEPOSIT',
+          calls: allCalls.map((c) => ({ to: c.to, data: c.data })),
+          description: desc,
+        });
+      } else {
+        signRequests.push({
+          stepId: depositStep.id,
+          chain: sourceChain,
+          type: 'APPROVE_AND_DEPOSIT',
+          description: desc,
+          serverSide: true,
+        });
+      }
     } else if (delegateNeeded) {
       const delegateCalls = this.circleService.buildDelegateCallData(sourceChain, user.delegateAddress);
       const delegateStep = await this.prisma.operationStep.create({
@@ -569,29 +661,99 @@ export class OperationsService {
     // Per-recipient steps
     for (let ri = 0; ri < recipients.length; ri++) {
       const r = recipients[ri];
-      const isInternal = sourceChain === r.chain && sourceChain === HUB_CHAIN;
+      const isSameChain = sourceChain === r.chain;
 
-      if (isInternal) {
-        const step = await this.prisma.operationStep.create({
-          data: {
-            operationId: operation.id,
-            stepIndex: stepIndex++,
-            chain: HUB_CHAIN,
+      if (isSameChain) {
+        // Same chain: direct transfer of sourceToken (no Gateway needed)
+        // If recipient wants a different token (outputToken), swap via LiFi
+        // Check if outputToken is actually a different token by looking up both in TOKEN_REGISTRY
+        const destTokenEntry = r.outputToken ? getTokenByAddress(r.outputToken, r.chain) : null;
+        const isSameToken = !r.outputToken
+          || r.outputToken.toLowerCase() === sourceTokenAddress.toLowerCase()
+          || (destTokenEntry && destTokenEntry === sourceTokenInfo);
+
+        if (!isSameToken) {
+          // Same chain, different output token → LiFi swap
+          const chainConfig = ALL_CHAINS[r.chain];
+          const swapSlippage = effectiveSwapSlippage(r.amountRaw, r.slippage);
+          const swapQuote = await this.lifiService.getQuote({
+            fromChain: chainConfig.chainId,
+            toChain: chainConfig.chainId,
+            fromToken: sourceTokenAddress,
+            toToken: r.outputToken!,
+            fromAmount: r.amountRaw.toString(),
+            fromAddress: user.walletAddress,
+            toAddress: r.address,
+            slippage: swapSlippage,
+          });
+
+          const swapCalls = this.lifiService.buildSwapCalls(
+            swapQuote, sourceTokenAddress, r.amountRaw,
+          );
+          const swapStep = await this.prisma.operationStep.create({
+            data: {
+              operationId: operation.id,
+              stepIndex: stepIndex++,
+              chain: r.chain,
+              type: 'LIFI_SWAP',
+              status: 'AWAITING_SIGNATURE',
+              callData: swapCalls.map((c) => ({ to: c.to, data: c.data, value: c.value?.toString() })),
+            },
+          });
+
+          signRequests.push({
+            stepId: swapStep.id,
+            chain: r.chain,
+            type: 'LIFI_SWAP',
+            calls: swapCalls.map((c) => ({ to: c.to, data: c.data })),
+            description: `Swap ${r.amount} ${sourceTokenSymbol} → ${swapQuote.action.toToken.symbol} → ${r.address} on ${r.chain}`,
+          });
+
+          swapEstimates.push({
+            recipientIndex: ri,
+            outputToken: swapQuote.action.toToken.symbol,
+            estimatedOutput: formatUnits(BigInt(swapQuote.estimate.toAmount), r.outputTokenDecimals ?? 18),
+            minimumOutput: formatUnits(BigInt(swapQuote.estimate.toAmountMin), r.outputTokenDecimals ?? 18),
+            lifiRoute: swapQuote.tool,
+          });
+        } else {
+          // Same chain, same token → direct ERC20 transfer
+          const step = await this.prisma.operationStep.create({
+            data: {
+              operationId: operation.id,
+              stepIndex: stepIndex++,
+              chain: sourceChain,
+              type: 'TRANSFER',
+              status: 'AWAITING_SIGNATURE',
+              callData: { type: 'erc20_transfer', token: sourceTokenSymbol, to: r.address, amount: r.amountRaw.toString() },
+            },
+          });
+
+          const transferCalls = [{
+            to: sourceTokenAddress,
+            data: encodeFunctionData({
+              abi: erc20Abi,
+              functionName: 'transfer',
+              args: [r.address as `0x${string}`, r.amountRaw],
+            }),
+          }];
+
+          signRequests.push({
+            stepId: step.id,
+            chain: sourceChain,
             type: 'TRANSFER',
-            status: 'AWAITING_SIGNATURE',
-            callData: { type: 'usdc_transfer', to: r.address, amount: r.amountRaw.toString() },
-          },
-        });
-
-        signRequests.push({
-          stepId: step.id,
-          chain: HUB_CHAIN,
-          type: 'TRANSFER',
-          description: `Transfer ${r.amount} USDC to ${r.address}`,
-        });
+            calls: transferCalls,
+            description: `Transfer ${r.amount} ${sourceTokenSymbol} to ${r.address}`,
+          });
+        }
       } else {
         // Cross-chain: burn on source → mint on destination
-        const mintRecipient = r.outputToken ? user.walletAddress : r.address;
+        // Check if outputToken on dest chain is actually a different token
+        const crossDestEntry = r.outputToken ? getTokenByAddress(r.outputToken, r.chain) : null;
+        const crossNeedsSwap = r.outputToken
+          && !(crossDestEntry && crossDestEntry === sourceTokenInfo)
+          && r.outputToken.toLowerCase() !== getUsdcAddress(r.chain).toLowerCase();
+        const mintRecipient = crossNeedsSwap ? user.walletAddress : r.address;
 
         const burnStep = await this.prisma.operationStep.create({
           data: {
@@ -624,12 +786,12 @@ export class OperationsService {
           stepId: burnStep.id,
           chain: sourceChain,
           type: 'BURN_INTENT',
-          description: `Burn ${r.amount} USDC → ${r.outputToken ? 'swap on' : r.address + ' on'} ${r.chain}`,
+          description: `Burn ${r.amount} USDC → ${crossNeedsSwap ? 'swap on' : r.address + ' on'} ${r.chain}`,
           serverSide: true,
         });
 
-        // Add LIFI_SWAP step for recipients with outputToken
-        if (r.outputToken) {
+        // Add LIFI_SWAP step if dest token is different
+        if (crossNeedsSwap) {
           const destChain = ALL_CHAINS[r.chain];
           const destUsdcAddress = getUsdcAddress(r.chain);
           const swapSlippage = effectiveSwapSlippage(r.amountRaw, r.slippage);
@@ -639,7 +801,7 @@ export class OperationsService {
               fromChain: destChain.chainId,
               toChain: destChain.chainId,
               fromToken: destUsdcAddress,
-              toToken: r.outputToken,
+              toToken: r.outputToken!,
               fromAmount: r.amountRaw.toString(),
               fromAddress: user.walletAddress,
               toAddress: r.address,

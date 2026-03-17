@@ -20,7 +20,7 @@ export interface ChainConfig {
 export const AA_GATEWAY_CHAINS: Record<string, ChainConfig> = {
   polygon: {
     chainId: 137,
-    rpc: 'https://polygon-rpc.com',
+    rpc: 'https://polygon.drpc.org',
     usdc: '0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359',
     explorer: 'https://polygonscan.com',
     gatewayDomain: 7,
@@ -285,6 +285,16 @@ export function getTokenInfo(symbol: string): TokenInfo | undefined {
 export function getTokenAddress(symbol: string, chainKey: string): string | undefined {
   const token = TOKEN_REGISTRY[symbol.toUpperCase()];
   return token?.addresses[chainKey];
+}
+
+/**
+ * Resolve token info from an on-chain address on a given chain.
+ */
+export function getTokenByAddress(address: string, chainKey: string): TokenInfo | undefined {
+  const lower = address.toLowerCase();
+  return Object.values(TOKEN_REGISTRY).find(
+    (t) => t.addresses[chainKey]?.toLowerCase() === lower,
+  );
 }
 
 /**

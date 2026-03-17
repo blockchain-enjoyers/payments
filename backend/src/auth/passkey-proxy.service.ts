@@ -13,7 +13,7 @@ export class PasskeyProxyService {
   private readonly logger = new Logger(PasskeyProxyService.name);
   private readonly rpID: string;
   private readonly rpName: string;
-  private readonly rpOrigin: string;
+  private readonly rpOrigin: string | string[];
 
   /** In-memory challenge store keyed by username. */
   private readonly challenges = new Map<string, string>();
@@ -21,7 +21,8 @@ export class PasskeyProxyService {
   constructor(private readonly configService: ConfigService) {
     this.rpID = this.configService.getOrThrow<string>('RP_ID');
     this.rpName = this.configService.get<string>('RP_NAME', 'OmniFlow');
-    this.rpOrigin = this.configService.getOrThrow<string>('RP_ORIGIN');
+    const rawOrigin = this.configService.getOrThrow<string>('RP_ORIGIN');
+    this.rpOrigin = rawOrigin.includes(',') ? rawOrigin.split(',').map(o => o.trim()) : rawOrigin;
   }
 
   /**

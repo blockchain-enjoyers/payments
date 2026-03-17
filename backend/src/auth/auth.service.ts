@@ -178,6 +178,7 @@ export class AuthService {
         username: true,
         walletAddress: true,
         delegateAddress: true,
+        credentialId: true,
         createdAt: true,
       },
     });

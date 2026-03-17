@@ -71,10 +71,11 @@ export class PaymentsService {
       ? new Date(Date.now() + dto.expiresIn * 1000)
       : new Date(Date.now() + 3600 * 1000); // default 1 hour
 
-    // Determine accepted chains (where merchant has delegate confirmed)
+    // Check if merchant has settlement capability (ECDSA module set up)
     const confirmedChains = merchant.delegateSetups
       .filter((d) => d.status === 'CONFIRMED')
       .map((d) => d.chain);
+    const settlementEnabled = confirmedChains.length > 0;
 
     const payment = await this.prisma.payment.create({
       data: {
@@ -105,7 +106,12 @@ export class PaymentsService {
       chain: payment.chain,
       checkoutUrl,
       expiresAt: payment.expiresAt,
-      acceptedChains: confirmedChains,
+      acceptedChains: Object.keys(AA_GATEWAY_CHAINS),
+      settlementEnabled,
+      settlementChains: confirmedChains,
+      ...(settlementEnabled ? {} : {
+        warning: 'Settlement module not configured. Incoming funds will remain on the chain the payer sends to without conversion. Set up the ECDSA executor module to enable automatic settlement.',
+      }),
     };
   }
 
@@ -128,21 +134,16 @@ export class PaymentsService {
     });
     if (!payment) throw new NotFoundException('Payment not found');
 
-    // Build calldata for each accepted chain
-    // For the merchant's receive token: direct transfer calldata
-    // Also list available payer tokens per chain (payer can pay with any token — settlement swaps)
-    const acceptedChains = payment.merchant.delegateSetups.map((d) => d.chain);
+    // All chains always available for payers — no restrictions
+    const acceptedChains = Object.keys(AA_GATEWAY_CHAINS);
     const paymentDetails: Record<
       string,
       { tokenAddress: string; calldata: string; amountRaw: string }
     > = {};
 
     for (const chainKey of acceptedChains) {
-      // Calldata uses the merchant's requested token on the receive chain
-      // For cross-chain/cross-token payments, the payer sends their token
-      // and settlement handles the swap
       const receiveTokenAddr = getTokenAddress(payment.token, chainKey)
-        || getUsdcAddress(chainKey); // fallback to USDC if token not on this chain
+        || getUsdcAddress(chainKey);
       const calldata = this.buildCalldata(
         payment.merchant.walletAddress as `0x${string}`,
         BigInt(payment.amountRaw),
@@ -155,15 +156,18 @@ export class PaymentsService {
       };
     }
 
-    // Available payer tokens per chain (payer can pay with any of these)
+    // Available payer tokens per chain (stablecoins only — no price feeds yet)
+    const STABLECOINS = new Set(['USDC', 'USDT', 'DAI']);
     const payerTokens: Record<string, { symbol: string; name: string; address: string; decimals: number }[]> = {};
     for (const chainKey of acceptedChains) {
-      payerTokens[chainKey] = getTokensForChain(chainKey).map((t) => ({
-        symbol: t.symbol,
-        name: t.name,
-        address: t.addresses[chainKey]!,
-        decimals: t.decimals,
-      }));
+      payerTokens[chainKey] = getTokensForChain(chainKey)
+        .filter((t) => STABLECOINS.has(t.symbol))
+        .map((t) => ({
+          symbol: t.symbol,
+          name: t.name,
+          address: t.addresses[chainKey]!,
+          decimals: t.decimals,
+        }));
     }
 
     return {

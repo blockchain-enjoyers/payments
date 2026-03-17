@@ -1024,7 +1024,6 @@ export const OperationStepScalarFieldEnum = {
   status: 'status',
   callData: 'callData',
   txHash: 'txHash',
-  userOpHash: 'userOpHash',
   burnIntentData: 'burnIntentData',
   attestation: 'attestation',
   operatorSignature: 'operatorSignature',

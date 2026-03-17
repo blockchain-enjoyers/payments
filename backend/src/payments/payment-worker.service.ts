@@ -327,6 +327,34 @@ export class PaymentWorkerService {
       );
     } else {
       // Needs settlement: cross-chain, cross-token, or both
+      // Check if merchant has ECDSA module set up for settlement
+      const delegateSetup = await this.prisma.delegateSetup.findFirst({
+        where: {
+          userId: payment.merchantId,
+          chain: payment.payerChain,
+          status: 'CONFIRMED',
+        },
+      });
+
+      if (!delegateSetup) {
+        // No settlement module — complete immediately, funds stay as-is
+        this.logger.log(
+          `Payment ${payment.id}: settlement needed but merchant has no ECDSA module on ${payment.payerChain}. Completing without settlement — funds remain as ${payerToken} on ${payment.payerChain}.`,
+        );
+        await this.prisma.payment.update({
+          where: { id: payment.id },
+          data: {
+            status: 'COMPLETED',
+            completedAt: new Date(),
+            feePercent: '0',
+            feeAmount: '0',
+            netAmount: transferredAmount.toString(),
+            errorMessage: `No settlement: funds received as ${payerToken} on ${payment.payerChain} (merchant ECDSA module not configured)`,
+          },
+        });
+        return;
+      }
+
       const existing = (payment as any).metadata?.settlement;
       if (!existing) {
         this.logger.log(

@@ -73,6 +73,24 @@ export class WalletController {
     return this.walletService.submitEnableExecutor(user.id, dto);
   }
 
+  @Post('setup-settlement')
+  @ApiOperation({ summary: 'Prepare combined settlement setup: ECDSA enable + delegate in one UserOp (1 passkey signature)' })
+  prepareSetupSettlement(
+    @CurrentUser() user: JwtUser,
+    @Body() dto: PrepareEnableExecutorDto,
+  ) {
+    return this.walletService.prepareSetupSettlement(user.id, dto);
+  }
+
+  @Post('setup-settlement/submit')
+  @ApiOperation({ summary: 'Submit combined settlement setup with passkey signature' })
+  submitSetupSettlement(
+    @CurrentUser() user: JwtUser,
+    @Body() dto: SubmitEnableExecutorDto,
+  ) {
+    return this.walletService.submitSetupSettlement(user.id, dto);
+  }
+
   @Post('userop/prepare')
   @ApiOperation({ summary: 'Prepare a UserOp from arbitrary calls (returns userOpHash for signing)' })
   prepareUserOp(

@@ -1,4 +1,4 @@
-import { IsArray, IsOptional, IsNumber, ValidateNested, ArrayMinSize, Min, Max } from 'class-validator';
+import { IsArray, IsOptional, IsNumber, IsString, ValidateNested, ArrayMinSize, Min, Max } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
 import { IsChain, IsEvmAddress, IsTokenAmount } from '../../common/validators/chain.validator';
@@ -60,4 +60,9 @@ export class PrepareSendDto {
   @IsOptional()
   @IsChain()
   sourceChain?: string;
+
+  @ApiProperty({ example: '0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359', required: false, description: 'Source token address on sourceChain (defaults to USDC)' })
+  @IsOptional()
+  @IsEvmAddress()
+  sourceToken?: string;
 }

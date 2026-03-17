@@ -9,6 +9,7 @@ import { GatewayService } from './gateway/gateway.service';
 import {
   AA_GATEWAY_CHAINS,
   getUsdcAddress,
+  TOKEN_REGISTRY,
 } from './config/chains';
 import { getZeroDevRpc } from './config/bundler';
 import {
@@ -22,10 +23,16 @@ import { USDC_DECIMALS } from './gateway/gateway.types';
 // Use Polygon as the reference chain for address computation
 const REFERENCE_CHAIN_KEY = 'polygon';
 
+export interface TokenBalance {
+  symbol: string;
+  balance: string;
+  decimals: number;
+}
+
 export interface AggregatedBalances {
   total: string;
   gatewayBalances: Record<string, string>;
-  onChainBalances: Record<string, string>;
+  onChainBalances: Record<string, Record<string, TokenBalance>>;
 }
 
 @Injectable()
@@ -101,43 +108,69 @@ export class CircleService {
       this.getMultiChainBalances(walletAddress),
     ]);
 
-    let totalRaw = 0n;
-
+    // Gateway balances are always USDC
+    let totalUsdcRaw = 0n;
     const gatewayMap: Record<string, string> = {};
     for (const gb of gatewayBalances) {
       gatewayMap[gb.chain] = formatUnits(gb.balance, USDC_DECIMALS);
-      totalRaw += gb.balance;
+      totalUsdcRaw += gb.balance;
     }
 
-    const onChainMap: Record<string, string> = {};
-    for (const [chain, balance] of Object.entries(onChainBalances)) {
-      onChainMap[chain] = formatUnits(balance, USDC_DECIMALS);
-      totalRaw += balance;
+    // On-chain: sum all stablecoin balances (normalized to 6 decimals for total)
+    for (const [, tokens] of Object.entries(onChainBalances)) {
+      for (const [, tb] of Object.entries(tokens)) {
+        // Normalize to 6 decimals for USD total
+        const raw = BigInt(
+          Math.floor(parseFloat(tb.balance) * 1e6),
+        );
+        totalUsdcRaw += raw;
+      }
     }
 
     return {
-      total: formatUnits(totalRaw, USDC_DECIMALS),
+      total: formatUnits(totalUsdcRaw, USDC_DECIMALS),
       gatewayBalances: gatewayMap,
-      onChainBalances: onChainMap,
+      onChainBalances,
     };
   }
 
   async getMultiChainBalances(
     walletAddress: string,
-  ): Promise<Record<string, bigint>> {
+  ): Promise<Record<string, Record<string, TokenBalance>>> {
     const chains = Object.keys(AA_GATEWAY_CHAINS);
-    const results: Record<string, bigint> = {};
+    const STABLECOINS = ['USDC', 'USDT', 'DAI'];
+
+    // Build flat list of all (chain, token) pairs to query
+    const queries: { chain: string; symbol: string; address: string; decimals: number }[] = [];
+    for (const chain of chains) {
+      for (const symbol of STABLECOINS) {
+        const token = TOKEN_REGISTRY[symbol];
+        const addr = token?.addresses[chain];
+        if (addr) {
+          queries.push({ chain, symbol, address: addr, decimals: token.decimals });
+        }
+      }
+    }
 
     const balances = await Promise.allSettled(
-      chains.map((chain) =>
-        this.gatewayService.getOnChainBalance(chain, walletAddress),
+      queries.map((q) =>
+        this.gatewayService.getTokenBalance(q.chain, q.address, walletAddress),
       ),
     );
 
-    for (let i = 0; i < chains.length; i++) {
+    const results: Record<string, Record<string, TokenBalance>> = {};
+    for (let i = 0; i < queries.length; i++) {
+      const q = queries[i];
       const result = balances[i];
-      results[chains[i]] =
-        result.status === 'fulfilled' ? result.value : 0n;
+      const raw = result.status === 'fulfilled' ? result.value : 0n;
+      if (raw === 0n) continue; // skip zero balances
+
+      if (!results[q.chain]) results[q.chain] = {};
+      results[q.chain][q.symbol] = {
+        symbol: q.symbol,
+        balance: formatUnits(raw, q.decimals),
+        decimals: q.decimals,
+      };
     }
 
     return results;

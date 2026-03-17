@@ -251,12 +251,20 @@
             <input type="text" id="sendAddress" placeholder="0xRecipient..." style="margin-bottom:0" />
           </div>
           <div class="row" style="margin-top:6px">
+            <select id="sendSourceChain" title="Source chain (where to send from)">
+              <option value="">source: auto (hub)</option>
+              <option value="polygon">source: polygon</option>
+              <option value="avalanche">source: avalanche</option>
+              <option value="base">source: base</option>
+              <option value="optimism">source: optimism</option>
+              <option value="arbitrum">source: arbitrum</option>
+            </select>
             <select id="sendDestChain">
-              <option value="polygon">polygon</option>
-              <option value="avalanche">avalanche</option>
-              <option value="base">base</option>
-              <option value="optimism">optimism</option>
-              <option value="arbitrum">arbitrum</option>
+              <option value="polygon">dest: polygon</option>
+              <option value="avalanche">dest: avalanche</option>
+              <option value="base">dest: base</option>
+              <option value="optimism">dest: optimism</option>
+              <option value="arbitrum">dest: arbitrum</option>
             </select>
             <input type="text" id="sendAmount" placeholder="10.00" style="max-width:100px;margin-bottom:0" />
             <button class="btn btn-sm btn-primary" style="flex:none"
@@ -1143,7 +1151,11 @@
         if (slippage) recipient.slippage = parseFloat(slippage);
       }
 
-      await apiCall('POST', '/v1/operations/send', { recipients: [recipient] });
+      const body = { recipients: [recipient] };
+      const sourceChain = document.getElementById('sendSourceChain').value;
+      if (sourceChain) body.sourceChain = sourceChain;
+
+      await apiCall('POST', '/v1/operations/send', body);
     }
 
     // ── Operations: Bridge ──────────────────────────────

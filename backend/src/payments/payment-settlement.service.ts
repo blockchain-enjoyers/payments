@@ -51,6 +51,7 @@ interface SettlementState {
   depositTxHash?: string;
   swapToUsdcTxHash?: string;
   swapToMerchantTxHash?: string;
+  mintedAmount?: string;         // raw USDC minted on dest chain (after gateway fee)
   attestation?: string;
   operatorSignature?: string;
   mintTxHash?: string;
@@ -328,16 +329,41 @@ export class PaymentSettlementService {
   ) {
     const merchant = payment.merchant;
     const delegateKey = this.authService.getDelegatePrivateKey(merchant);
-    const usdcAmount = BigInt(settlement.usdcAmount || settlement.amount);
+    const depositedAmount = BigInt(settlement.usdcAmount || settlement.amount);
+
+    // Gateway fee = gas fee + (amount × 0.005%).
+    // See: https://developers.circle.com/gateway/references/fees
+    // Gas fees range $0.001 (cheap L2s) to $2.00 (Ethereum).
+    // We reserve: transferFee (0.01% with buffer) + gasFee per chain.
+    const transferFee = (depositedAmount * 10n) / 100000n; // 0.01% (2× buffer over 0.005%)
+    // Gas fees from https://developers.circle.com/gateway/references/fees
+    // Values include ~50% buffer over documented fees.
+    const gasFees: Record<string, bigint> = {
+      ethereum: 3_000_000n,   // $2.00 → $3.00 buffer
+      base: 15_000n,          // $0.01 → $0.015
+      avalanche: 30_000n,     // $0.02 → $0.03
+      arbitrum: 15_000n,      // $0.01 → $0.015
+      optimism: 2_500n,       // $0.0015 → $0.0025
+      polygon: 2_500n,        // $0.0015 → $0.0025
+      sonic: 15_000n,         // $0.01 → $0.015
+      unichain: 2_000n,       // $0.001 → $0.002
+      sei: 2_000n,            // $0.001 → $0.002
+      worldchain: 15_000n,    // $0.01 → $0.015
+      hyperevm: 75_000n,      // $0.05 → $0.075
+    };
+    const chainGasFee = gasFees[settlement.sourceChain] ?? 30_000n; // default $0.03
+    const gatewayFee = transferFee + chainGasFee;
+    const burnAmount = depositedAmount - gatewayFee;
 
     this.logger.log(
-      `Submitting burn intent for payment ${payment.id}: ${settlement.sourceChain} → ${settlement.destChain}`,
+      `Submitting burn intent for payment ${payment.id}: ${settlement.sourceChain} → ${settlement.destChain} ` +
+      `(deposited=${depositedAmount}, fee=${gatewayFee}, burn=${burnAmount})`,
     );
 
     const { transfer } = await this.circleService.submitBurnIntent(
       settlement.sourceChain,
       settlement.destChain,
-      usdcAmount,
+      burnAmount,
       merchant.walletAddress,
       merchant.walletAddress,
       delegateKey,
@@ -345,6 +371,7 @@ export class PaymentSettlementService {
 
     settlement.attestation = transfer.attestation;
     settlement.operatorSignature = transfer.signature;
+    settlement.mintedAmount = burnAmount.toString();
     settlement.phase = 'MINT';
     settlement.retries = 0;
 
@@ -354,7 +381,7 @@ export class PaymentSettlementService {
     });
 
     this.logger.log(
-      `Burn intent confirmed for payment ${payment.id}, attestation received`,
+      `Burn intent confirmed for payment ${payment.id}, attestation received (mintedAmount=${burnAmount})`,
     );
   }
 
@@ -454,26 +481,27 @@ export class PaymentSettlementService {
     if (!merchantTokenAddr) throw new Error(`Token ${settlement.merchantToken} not found on ${destChain}`);
 
     const usdcAddr = getUsdcAddress(destChain);
-    const usdcAmount = BigInt(settlement.usdcAmount || settlement.amount);
+    // Use mintedAmount (after gateway fee) if available, otherwise full usdcAmount
+    const swapAmount = BigInt(settlement.mintedAmount || settlement.usdcAmount || settlement.amount);
 
     await this.requireEcdsaEnabled(destChain, merchant.walletAddress);
 
     this.logger.log(
-      `Swapping USDC → ${settlement.merchantToken} on ${destChain} for payment ${payment.id}`,
+      `Swapping ${swapAmount} USDC → ${settlement.merchantToken} on ${destChain} for payment ${payment.id}`,
     );
 
-    const slippage = effectiveSwapSlippage(usdcAmount);
+    const slippage = effectiveSwapSlippage(swapAmount);
     const quote = await this.lifiService.getQuote({
       fromChain: chainConfig.chainId,
       toChain: chainConfig.chainId,
       fromToken: usdcAddr,
       toToken: merchantTokenAddr,
-      fromAmount: usdcAmount.toString(),
+      fromAmount: swapAmount.toString(),
       fromAddress: merchant.walletAddress,
       slippage,
     });
 
-    const swapCalls = this.lifiService.buildSwapCalls(quote, usdcAddr, usdcAmount);
+    const swapCalls = this.lifiService.buildSwapCalls(quote, usdcAddr, swapAmount);
     const delegateKey = this.authService.getDelegatePrivateKey(merchant);
 
     const txHash = await this.userOpService.executeServerSide(
@@ -485,7 +513,7 @@ export class PaymentSettlementService {
     );
 
     settlement.swapToMerchantTxHash = txHash;
-    await this.completePayment(payment, settlement, usdcAmount);
+    await this.completePayment(payment, settlement, swapAmount);
 
     this.logger.log(
       `Swap USDC → ${settlement.merchantToken} done for payment ${payment.id}: txHash=${txHash}`,

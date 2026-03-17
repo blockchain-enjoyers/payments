@@ -449,7 +449,7 @@ export class UserOpService {
     chainKey: string,
     credentialId: string,
     publicKey: string,
-    delegateAddress: string,
+    delegatePrivateKey: string,
   ) {
     const chainConfig = ALL_CHAINS[chainKey];
     if (!chainConfig) throw new BadRequestException(`Unsupported chain: ${chainKey}`);
@@ -458,83 +458,71 @@ export class UserOpService {
     const chain = this.buildViemChain(chainKey, chainConfig);
     const client = createPublicClient({ chain, transport: http(zdRpcUrl) });
 
-    const account = await this.buildKernelAccount(client, credentialId, publicKey);
+    const entryPoint = getEntryPoint('0.7');
 
-    // Get Kernel's current validator nonce
-    let validatorNonce = 1;
-    try {
-      const nonce = await (createPublicClient({ transport: http(chainConfig.rpc) })).readContract({
-        address: account.address as `0x${string}`,
-        abi: KernelV3_1AccountAbi,
-        functionName: 'currentNonce',
-      }) as number;
-      validatorNonce = nonce === 0 ? 1 : nonce;
-    } catch {
-      validatorNonce = 1;
-    }
+    // Build passkey validator (sudo) and ECDSA validator (regular)
+    const passkeyValidator = await this.buildPasskeyValidator(
+      client, credentialId, publicKey,
+    );
 
-    // Get Kernel version from on-chain metadata
-    let kernelVersion = '0.3.1';
-    try {
-      const ver = await (createPublicClient({ transport: http(chainConfig.rpc) })).readContract({
-        address: account.address as `0x${string}`,
-        abi: KernelV3_1AccountAbi,
-        functionName: 'accountId',
-      }) as string;
-      // accountId returns something like "kernel.advanced.v.0.3.1" — extract version
-      const match = ver.match(/(\d+\.\d+\.\d+)/);
-      if (match) kernelVersion = match[1];
-    } catch {
-      // Use default
-    }
+    const { privateKeyToAccount } = await import('viem/accounts');
+    const delegateAccount = privateKeyToAccount(delegatePrivateKey as `0x${string}`);
 
-    // execute(bytes32,bytes) selector
-    const EXECUTE_SELECTOR = '0xe9ae5c53' as `0x${string}`;
+    const ecdsaValidator = await signerToEcdsaValidator(client, {
+      signer: delegateAccount,
+      entryPoint,
+      kernelVersion: KERNEL_V3_1,
+    });
 
-    // Build the EIP-712 typed data (same structure as SDK's getPluginsEnableTypedData)
-    const typedData = {
-      domain: {
-        name: 'Kernel',
-        version: kernelVersion === '0.3.0' ? '0.3.0-beta' : kernelVersion,
-        chainId: BigInt(chainConfig.chainId),
-        verifyingContract: account.address as `0x${string}`,
-      },
-      types: {
-        Enable: [
-          { name: 'validationId', type: 'bytes21' },
-          { name: 'nonce', type: 'uint32' },
-          { name: 'hook', type: 'address' },
-          { name: 'validatorData', type: 'bytes' },
-          { name: 'hookData', type: 'bytes' },
-          { name: 'selectorData', type: 'bytes' },
-        ],
-      },
-      primaryType: 'Enable' as const,
-      message: {
-        validationId: concat([
-          VALIDATOR_TYPE.SECONDARY as `0x${string}`,
-          pad(ECDSA_VALIDATOR_ADDRESS as `0x${string}`, { size: 20, dir: 'right' }),
-        ]),
-        nonce: validatorNonce,
-        hook: zeroAddress,
-        validatorData: delegateAddress as `0x${string}`, // ECDSA validator enableData = signer address
-        hookData: '0x' as `0x${string}`,
-        selectorData: concat([
-          EXECUTE_SELECTOR,
-          zeroAddress, // executor address (zero = account itself)
-          zeroAddress, // hook address
-          encodeAbiParameters(
-            parseAbiParameters('bytes selectorInitData, bytes hookInitData'),
-            [CALL_TYPE.DELEGATE_CALL as `0x${string}`, '0x0000' as `0x${string}`],
-          ),
-        ]),
-      },
+    // Intercept sudo's signTypedData to capture the enable typed data
+    // that the SDK computes internally — guarantees hash matches the UserOp
+    let capturedTypedData: any = null;
+    const originalSign = passkeyValidator.signTypedData;
+    passkeyValidator.signTypedData = async (td: any) => {
+      capturedTypedData = td;
+      // Return dummy signature — we only need the typed data
+      return ('0x' + 'ff'.repeat(65)) as `0x${string}`;
     };
 
-    const enableHash = hashTypedData(typedData);
+    const account = await createKernelAccount(client, {
+      plugins: {
+        sudo: passkeyValidator,
+        regular: ecdsaValidator,
+      },
+      entryPoint,
+      kernelVersion: KERNEL_V3_1,
+    });
+
+    // Trigger signUserOperation to invoke the enable flow (calls signTypedData)
+    if (!capturedTypedData) {
+      try {
+        await account.signUserOperation({
+          callData: '0x' as `0x${string}`,
+          callGasLimit: 0n,
+          maxFeePerGas: 1n,
+          maxPriorityFeePerGas: 1n,
+          nonce: 0n,
+          preVerificationGas: 0n,
+          sender: account.address,
+          signature: '0x' as `0x${string}`,
+          verificationGasLimit: 0n,
+        });
+      } catch {
+        // Expected — we just need the typed data capture
+      }
+    }
+
+    // Restore original
+    passkeyValidator.signTypedData = originalSign;
+
+    if (!capturedTypedData) {
+      throw new BadRequestException('Failed to compute enable typed data from SDK');
+    }
+
+    const enableHash = hashTypedData(capturedTypedData);
 
     return {
-      typedData,
+      typedData: capturedTypedData,
       enableHash,
       mscaAddress: account.address,
       chainId: chainConfig.chainId,
@@ -554,6 +542,7 @@ export class UserOpService {
     publicKey: string,
     delegatePrivateKey: string,
     enableSignature: string,
+    extraCalls?: { to: `0x${string}`; data: `0x${string}`; value?: bigint }[],
   ): Promise<string> {
     const chainConfig = ALL_CHAINS[chainKey];
     if (!chainConfig) throw new BadRequestException(`Unsupported chain: ${chainKey}`);
@@ -601,10 +590,11 @@ export class UserOpService {
       account, accountClient as any, chain, bundlerTransport,
     );
 
-    const calls: { to: `0x${string}`; data: `0x${string}`; value?: bigint }[] = [
-      // Dummy call — the enable happens in the signature/nonce, not calldata
-      { to: zeroAddress, data: '0x' as `0x${string}`, value: 0n },
-    ];
+    // If extra calls provided (e.g. addDelegate), include them; otherwise dummy call
+    const calls: { to: `0x${string}`; data: `0x${string}`; value?: bigint }[] =
+      extraCalls && extraCalls.length > 0
+        ? extraCalls
+        : [{ to: zeroAddress, data: '0x' as `0x${string}`, value: 0n }];
 
     const opHash = await bundlerClient.sendUserOperation({ calls });
 
@@ -619,6 +609,77 @@ export class UserOpService {
     return txHash;
   }
 
+  /**
+   * Submit a UserOp signed server-side by the ECDSA validator (delegate private key).
+   * ECDSA is installed as a SECONDARY (regular) validator, so we need the passkey
+   * as sudo and ECDSA as regular. The SDK detects ECDSA is already enabled on-chain
+   * and uses DEFAULT mode (no enable needed), signing with the delegate key.
+   */
+  async submitServerSideUserOp(
+    chainKey: string,
+    walletAddress: string,
+    credentialId: string,
+    publicKey: string,
+    delegatePrivateKey: string,
+    calls: { to: string; data: string; value?: bigint }[],
+  ): Promise<string> {
+    const chainConfig = ALL_CHAINS[chainKey];
+    if (!chainConfig) throw new BadRequestException(`Unsupported chain: ${chainKey}`);
+
+    const { url: bundlerUrl } = getBundlerRpc(chainConfig.chainId);
+    const chain = this.buildViemChain(chainKey, chainConfig);
+    const bundlerTransport = http(bundlerUrl);
+    const zdRpcUrl = getZeroDevRpc(chainConfig.chainId);
+    const accountClient = createPublicClient({ chain, transport: http(zdRpcUrl) });
+
+    const entryPoint = getEntryPoint('0.7');
+
+    // Build passkey validator (sudo — matches on-chain root validator)
+    const passkeyValidator = await this.buildPasskeyValidator(
+      accountClient, credentialId, publicKey,
+    );
+
+    // Build ECDSA validator (regular/secondary — matches on-chain config)
+    const { privateKeyToAccount } = await import('viem/accounts');
+    const delegateAccount = privateKeyToAccount(delegatePrivateKey as `0x${string}`);
+
+    const ecdsaValidator = await signerToEcdsaValidator(accountClient, {
+      signer: delegateAccount,
+      entryPoint,
+      kernelVersion: KERNEL_V3_1,
+    });
+
+    const account = await createKernelAccount(accountClient, {
+      address: walletAddress as `0x${string}`,
+      plugins: {
+        sudo: passkeyValidator,
+        regular: ecdsaValidator,
+      },
+      entryPoint,
+      kernelVersion: KERNEL_V3_1,
+    });
+
+    const bundlerClient = this.createSponsoredBundlerClient(
+      account, accountClient as any, chain, bundlerTransport,
+    );
+
+    const formattedCalls = calls.map(c => ({
+      to: c.to as `0x${string}`,
+      data: c.data as `0x${string}`,
+      value: c.value ?? 0n,
+    }));
+
+    const opHash = await bundlerClient.sendUserOperation({ calls: formattedCalls });
+    this.logger.log(`Server-side UserOp submitted on ${chainKey}: opHash=${opHash}`);
+
+    const receipt = await this.waitForReceipt(
+      createPublicClient({ chain, transport: bundlerTransport }) as any, opHash,
+    );
+    const txHash = receipt.receipt.transactionHash;
+    this.logger.log(`Server-side UserOp confirmed on ${chainKey}: txHash=${txHash}`);
+    return txHash;
+  }
+
   // ---------------------------------------------------------------------------
   // Private helpers
   // ---------------------------------------------------------------------------
@@ -629,6 +690,7 @@ export class UserOpService {
     8453, 84532,  // Base, Base Sepolia
     10, 11155420, // Optimism, Optimism Sepolia
     42161, 421614, // Arbitrum, Arbitrum Sepolia
+    43114, 43113, // Avalanche, Avalanche Fuji
   ]);
 
   /**
@@ -637,6 +699,10 @@ export class UserOpService {
    * ABI: (bytes authenticatorData, string clientDataJSON, uint256 responseTypeLocation,
    *        uint256 r, uint256 s, bool usePrecompiled)
    */
+  /** P256 curve order */
+  private static readonly P256_N =
+    0xFFFFFFFF00000000FFFFFFFFFFFFFFFFBCE6FAADA7179E84F3B9CAC2FC632551n;
+
   encodeWebAuthnSignature(
     rawSignature: string,
     webauthn: {
@@ -650,7 +716,14 @@ export class UserOpService {
     // rawSignature is r||s (64 bytes = 128 hex chars after 0x)
     const sigHex = rawSignature.startsWith('0x') ? rawSignature.slice(2) : rawSignature;
     const r = BigInt('0x' + sigHex.slice(0, 64));
-    const s = BigInt('0x' + sigHex.slice(64, 128));
+    let s = BigInt('0x' + sigHex.slice(64, 128));
+
+    // Normalize s to lower half of curve order (required by on-chain P256 verifiers)
+    const halfN = UserOpService.P256_N / 2n;
+    if (s > halfN) {
+      s = UserOpService.P256_N - s;
+      this.logger.debug(`P256 s-value normalized to lower half`);
+    }
 
     const usePrecompiled = UserOpService.RIP7212_CHAINS.has(chainId);
 
@@ -794,27 +867,48 @@ export class UserOpService {
 
   /**
    * Gas fee estimator — queries the chain's NATIVE RPC for real EIP-1559 fee
-   * data, then adds a generous buffer to survive the biometric signing delay
-   * (6-10 seconds on Polygon where blocks are 2s and base fee can rise 12.5%
-   * per block → up to ~1.42x in 6 seconds).
-   *
-   * We intentionally do NOT use the bundler RPC for gas pricing because:
-   * - The bundler may proxy to a different gas oracle with different values
-   * - pimlico_getUserOperationGasPrice may not be supported
-   * - The bundler's own minimum may drift between prepare and submit
-   *
-   * Instead we query the native RPC and apply a buffer that covers worst-case
-   * EIP-1559 base fee growth over the signing window.
+   * data, then queries the bundler (Pimlico) for its minimum gas price.
+   * Uses the maximum of both to ensure the UserOp is accepted.
    */
   private feeEstimator(chain: any) {
     return async () => {
       const chainConfig = Object.values(ALL_CHAINS).find(
         (c) => c.chainId === chain.id,
       ) as ChainConfig | undefined;
-      // Use native chain RPC (not bundler) for accurate gas pricing
       const nativeRpc = chainConfig?.rpc ?? chain.rpcUrls.default.http[0];
 
-      // Try EIP-1559 fee data first (eth_feeHistory gives baseFee + priority)
+      // 1. Query bundler gas price (Pimlico-specific)
+      let bundlerMaxFee = 0n;
+      let bundlerPriority = 0n;
+      try {
+        const { url: bundlerUrl, provider } = getBundlerRpc(chain.id);
+        if (provider === 'pimlico') {
+          const bRes = await fetch(bundlerUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              jsonrpc: '2.0',
+              id: 1,
+              method: 'pimlico_getUserOperationGasPrice',
+              params: [],
+            }),
+          });
+          const bData = await bRes.json();
+          if (bData.result?.fast) {
+            bundlerMaxFee = BigInt(bData.result.fast.maxFeePerGas);
+            bundlerPriority = BigInt(bData.result.fast.maxPriorityFeePerGas);
+            this.logger.debug(
+              `Bundler gas price chain ${chain.id}: maxFee=${bundlerMaxFee}, priority=${bundlerPriority}`,
+            );
+          }
+        }
+      } catch (err) {
+        this.logger.warn(`Bundler gas price query failed for chain ${chain.id}: ${err}`);
+      }
+
+      // 2. Query native chain RPC for EIP-1559 fee data
+      let chainMaxFee = 0n;
+      let chainPriority = 0n;
       try {
         const feeRes = await fetch(nativeRpc, {
           method: 'POST',
@@ -830,59 +924,60 @@ export class UserOpService {
 
         if (feeData.result?.baseFeePerGas?.length) {
           const baseFees = feeData.result.baseFeePerGas.map((f: string) => BigInt(f));
-          // Use the highest recent base fee as starting point
           const peakBaseFee = baseFees.reduce((a: bigint, b: bigint) => a > b ? a : b);
 
-          // Get priority fee from reward percentiles
           const rewards = feeData.result.reward ?? [];
-          let maxPriorityFee = 1_500_000_000n; // default 1.5 gwei
+          let maxPriorityFee = 1_500_000_000n;
           if (rewards.length > 0) {
             const allTips = rewards.flatMap((r: string[]) => r.map((v: string) => BigInt(v)));
             maxPriorityFee = allTips.reduce((a: bigint, b: bigint) => a > b ? a : b);
           }
 
-          // Buffer: 2x base fee covers ~5 consecutive max-increase blocks
-          // (1.125^5 = 1.80x < 2x). Priority fee gets 1.5x buffer.
-          const bufferedBaseFee = peakBaseFee * 2n;
-          const bufferedPriority = maxPriorityFee * 3n / 2n;
-          let maxFeePerGas = bufferedBaseFee + bufferedPriority;
-
-          // Enforce per-chain minimum
-          const minFee = MIN_FEE_PER_GAS[chain.id] ?? 100_000n;
-          if (maxFeePerGas < minFee) maxFeePerGas = minFee;
-
-          this.logger.debug(
-            `Fee estimate chain ${chain.id} (EIP-1559): peakBase=${peakBaseFee}, priority=${maxPriorityFee}, maxFee=${maxFeePerGas}`,
-          );
-
-          return { maxFeePerGas, maxPriorityFeePerGas: bufferedPriority };
+          // Buffer: 2x base fee + 1.5x priority
+          chainPriority = maxPriorityFee * 3n / 2n;
+          chainMaxFee = peakBaseFee * 2n + chainPriority;
         }
       } catch (err) {
         this.logger.warn(`EIP-1559 fee estimation failed for chain ${chain.id}: ${err}`);
       }
 
-      // Fallback: legacy eth_gasPrice with 2x buffer
-      const fallbackRes = await fetch(nativeRpc, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          jsonrpc: '2.0',
-          id: 1,
-          method: 'eth_gasPrice',
-          params: [],
-        }),
-      });
-      const fallbackData = await fallbackRes.json();
-      const gasPrice = BigInt(fallbackData.result);
+      // Fallback: legacy eth_gasPrice
+      if (chainMaxFee === 0n) {
+        try {
+          const fallbackRes = await fetch(nativeRpc, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              jsonrpc: '2.0',
+              id: 1,
+              method: 'eth_gasPrice',
+              params: [],
+            }),
+          });
+          const fallbackData = await fallbackRes.json();
+          const gasPrice = BigInt(fallbackData.result);
+          chainMaxFee = gasPrice > 100_000n ? gasPrice * 2n : 100_000n;
+          chainPriority = chainMaxFee;
+        } catch (err) {
+          this.logger.warn(`Legacy gas price failed for chain ${chain.id}: ${err}`);
+        }
+      }
+
+      // 3. Use the maximum of chain estimate and bundler minimum
+      let maxFeePerGas = chainMaxFee > bundlerMaxFee ? chainMaxFee : bundlerMaxFee;
+      let maxPriorityFeePerGas = chainPriority > bundlerPriority ? chainPriority : bundlerPriority;
+
+      // Enforce per-chain minimum
       const minFee = MIN_FEE_PER_GAS[chain.id] ?? 100_000n;
-      const estimated = gasPrice > 100_000n ? gasPrice * 2n : 100_000n;
-      const maxFeePerGas = estimated > minFee ? estimated : minFee;
+      if (maxFeePerGas < minFee) maxFeePerGas = minFee;
+      if (maxPriorityFeePerGas > maxFeePerGas) maxPriorityFeePerGas = maxFeePerGas;
 
       this.logger.debug(
-        `Fee estimate chain ${chain.id} (legacy): gasPrice=${gasPrice}, maxFee=${maxFeePerGas}`,
+        `Fee estimate chain ${chain.id}: chainFee=${chainMaxFee}, bundlerFee=${bundlerMaxFee}, ` +
+        `final maxFee=${maxFeePerGas}, priority=${maxPriorityFeePerGas}`,
       );
 
-      return { maxFeePerGas, maxPriorityFeePerGas: maxFeePerGas };
+      return { maxFeePerGas, maxPriorityFeePerGas };
     };
   }
 

@@ -410,7 +410,7 @@ export class WalletService {
       dto.chain,
       user.credentialId,
       user.publicKey,
-      user.delegateAddress,
+      this.getDelegatePrivateKey(),
     );
 
     return {
@@ -496,6 +496,159 @@ export class WalletService {
     );
 
     return { chain: dto.chain, txHash, status: 'ENABLED' };
+  }
+
+  /**
+   * Combined setup: enable ECDSA validator + add delegate in a single UserOp, one passkey signature.
+   */
+  async prepareSetupSettlement(userId: string, dto: { chain: string }) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      include: { delegateSetups: true },
+    });
+    if (!user) throw new NotFoundException('User not found');
+
+    if (!(dto.chain in ALL_CHAINS)) {
+      throw new BadRequestException(`Unsupported chain: ${dto.chain}`);
+    }
+
+    // Check current state
+    const isEnabled = await this.userOpService.isEcdsaValidatorEnabled(
+      dto.chain, user.walletAddress,
+    );
+    const delegateSetup = user.delegateSetups.find(d => d.chain === dto.chain);
+    const delegateConfirmed = delegateSetup?.status === 'CONFIRMED';
+
+    if (isEnabled && delegateConfirmed) {
+      return { chain: dto.chain, alreadySetup: true, message: 'Settlement already configured on this chain' };
+    }
+
+    const needsUninstall = await this.userOpService.isEcdsaValidatorInstalled(
+      dto.chain, user.walletAddress,
+    );
+
+    let uninstallUserOpHash: string | undefined;
+    let uninstallRequestId: string | undefined;
+
+    if (needsUninstall) {
+      const uninstallCalls = this.userOpService.buildUninstallEcdsaCalls(
+        user.walletAddress as `0x${string}`,
+        user.delegateAddress as `0x${string}`,
+      );
+      const prepared = await this.userOpService.prepareUserOp(
+        dto.chain, user.credentialId, user.publicKey, uninstallCalls,
+      );
+      uninstallRequestId = crypto.randomUUID();
+      this.pendingUserOps.set(uninstallRequestId, {
+        userId, chain: dto.chain,
+        unsignedUserOp: prepared.unsignedUserOp,
+        entryPointAddress: prepared.entryPointAddress,
+        entryPointVersion: prepared.entryPointVersion,
+        createdAt: Date.now(),
+      });
+      uninstallUserOpHash = prepared.userOpHash;
+    }
+
+    // Get enable EIP-712 hash (one passkey signature needed)
+    // Pass delegate private key so SDK can build the exact same ECDSA validator
+    // internally, guaranteeing the enable hash matches the UserOp signature
+    const result = await this.userOpService.getEnableEcdsaTypedData(
+      dto.chain, user.credentialId, user.publicKey, this.getDelegatePrivateKey(),
+    );
+
+    return {
+      chain: dto.chain,
+      enableHash: result.enableHash,
+      mscaAddress: result.mscaAddress,
+      needsDelegate: !delegateConfirmed,
+      needsUninstall,
+      ...(needsUninstall ? { uninstallUserOpHash, uninstallRequestId } : {}),
+      description: 'Enable settlement module' + (!delegateConfirmed ? ' + add delegate' : '') + ` on ${dto.chain}`,
+    };
+  }
+
+  async submitSetupSettlement(
+    userId: string,
+    dto: {
+      chain: string;
+      enableSignature: string;
+      webauthn?: { authenticatorData: string; clientDataJSON: string; challengeIndex: number; typeIndex: number };
+      uninstallRequestId?: string;
+      uninstallSignature?: string;
+      uninstallWebauthn?: { authenticatorData: string; clientDataJSON: string; challengeIndex: number; typeIndex: number };
+    },
+  ) {
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+    if (!user) throw new NotFoundException('User not found');
+
+    const chainConfig = ALL_CHAINS[dto.chain];
+    if (!chainConfig) throw new BadRequestException(`Unsupported chain: ${dto.chain}`);
+
+    // Step 1: Uninstall if needed
+    if (dto.uninstallRequestId && dto.uninstallSignature) {
+      const pending = this.pendingUserOps.get(dto.uninstallRequestId);
+      if (!pending) throw new NotFoundException('Uninstall UserOp not found or expired');
+      if (pending.userId !== userId) throw new BadRequestException('UserOp belongs to a different user');
+      this.pendingUserOps.delete(dto.uninstallRequestId);
+
+      const uninstallTxHash = await this.userOpService.submitUserOp(
+        pending.chain,
+        { unsignedUserOp: pending.unsignedUserOp, entryPointAddress: pending.entryPointAddress, entryPointVersion: pending.entryPointVersion },
+        dto.uninstallSignature, dto.uninstallWebauthn,
+      );
+      this.logger.log(`ECDSA uninstall confirmed on ${dto.chain}: txHash=${uninstallTxHash}`);
+    }
+
+    // Step 2: Encode enable signature
+    let encodedEnableSignature = dto.enableSignature;
+    if (dto.webauthn) {
+      encodedEnableSignature = this.userOpService.encodeWebAuthnSignature(
+        dto.enableSignature, dto.webauthn, chainConfig.chainId,
+      );
+    }
+
+    // Step 3: Submit enable ECDSA + addDelegate in one UserOp
+    // The enable happens via the signature (ENABLE mode), and addDelegate
+    // executes as the actual call within the same UserOp.
+    const delegateCalls = this.circleService.buildDelegateCallData(dto.chain, user.delegateAddress);
+    const formattedCalls = delegateCalls.map(c => ({
+      to: c.to as `0x${string}`,
+      data: c.data as `0x${string}`,
+      value: c.value ?? 0n,
+    }));
+
+    const txHash = await this.userOpService.submitEnableEcdsaValidator(
+      dto.chain, user.credentialId, user.publicKey,
+      this.getDelegatePrivateKey(), encodedEnableSignature,
+      formattedCalls,
+    );
+    this.logger.log(`ECDSA enabled + delegate added on ${dto.chain}: txHash=${txHash}`);
+
+    // Step 4: Verify delegate and mark confirmed
+    let isAuthorized = false;
+    try {
+      const client = createPublicClient({ transport: http(chainConfig.rpc) });
+      isAuthorized = await client.readContract({
+        address: GATEWAY_WALLET as `0x${string}`,
+        abi: GATEWAY_WALLET_DELEGATE_ABI,
+        functionName: 'isAuthorizedForBalance',
+        args: [
+          chainConfig.usdc as `0x${string}`,
+          user.walletAddress as `0x${string}`,
+          user.delegateAddress as `0x${string}`,
+        ],
+      }) as boolean;
+    } catch (err) {
+      this.logger.warn(`Delegate on-chain check failed: ${err}`);
+    }
+
+    await this.prisma.delegateSetup.upsert({
+      where: { userId_chain: { userId, chain: dto.chain } },
+      create: { userId, chain: dto.chain, status: isAuthorized ? 'CONFIRMED' : 'SUBMITTED', txHash },
+      update: { status: isAuthorized ? 'CONFIRMED' : 'SUBMITTED', txHash, errorMessage: null },
+    });
+
+    return { chain: dto.chain, txHash, status: isAuthorized ? 'SETUP_COMPLETE' : 'DELEGATE_PENDING' };
   }
 
   private getDelegatePrivateKey(): string {
