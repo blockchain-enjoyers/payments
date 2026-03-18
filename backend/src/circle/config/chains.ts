@@ -1,6 +1,6 @@
 export interface ChainConfig {
   chainId: number;
-  rpc: string;
+  rpcs: string[];
   usdc: string;
   explorer: string;
   gatewayDomain?: number;
@@ -13,61 +13,127 @@ export interface ChainConfig {
   };
 }
 
+/** Helper to construct ChainConfig objects. */
+function chain(c: ChainConfig): ChainConfig {
+  return c;
+}
+
 /**
  * Chains supporting BOTH Circle AA and Gateway (full cross-chain flow)
  * Polygon = hub chain (primary liquidity hub)
  */
 export const AA_GATEWAY_CHAINS: Record<string, ChainConfig> = {
-  polygon: {
+  polygon: chain({
     chainId: 137,
-    rpc: 'https://polygon.drpc.org',
+    rpcs: [
+      'https://polygon.drpc.org',
+      'https://polygon-rpc.com',
+      'https://rpc.ankr.com/polygon',
+      'https://polygon-bor-rpc.publicnode.com',
+      'https://polygon-public.nodies.app',
+      'https://polygon-mainnet.rpcfast.com?api_key=xbhWBI1Wkguk8SNMu1bvvLurPGLXmgwYeC4S6g2H7WdwFigZSmPWVZRxrskEQwIf',
+      'https://gateway.tenderly.co/public/polygon',
+      'https://polygon-mainnet.gateway.tatum.io',
+      'https://polygon.gateway.tenderly.co',
+      'https://go.getblock.io/02667b699f05444ab2c64f9bff28f027',
+      'https://rpc-mainnet.matic.quiknode.pro',
+      'https://rpc.sentio.xyz/matic',
+      'https://api.zan.top/polygon-mainnet',
+      'https://polygon.rpc.subquery.network/public'
+
+    ],
     usdc: '0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359',
     explorer: 'https://polygonscan.com',
     gatewayDomain: 7,
     aaSupported: true,
     finalitySeconds: 180,
     nativeCurrency: { name: 'POL', symbol: 'POL', decimals: 18 },
-  },
-  avalanche: {
+  }),
+  avalanche: chain({
     chainId: 43114,
-    rpc: 'https://api.avax.network/ext/bc/C/rpc',
+    rpcs: [
+      'https://api.avax.network/ext/bc/C/rpc',
+      'https://avalanche.drpc.org',
+      'https://avalanche-c-chain-rpc.publicnode.com',
+      'https://avalanche-public.nodies.app/ext/bc/C/rpc',
+      'https://1rpc.io/avax/c',
+      'https://avax.meowrpc.com',
+      'https://ava-mainnet.public.blastapi.io/ext/bc/C/rpc',
+      'https://endpoints.omniatech.io/v1/avax/mainnet/public',
+      'https://avalanche.api.onfinality.io/public/ext/bc/C/rpc',
+      'https://avalanche-mainnet.gateway.tenderly.co',
+      'https://avalanche.rpc.subquery.network/public',
+    ],
     usdc: '0xB97EF9Ef8734C71904D8002F8b6Bc66Dd9c48a6E',
     explorer: 'https://snowtrace.io',
     gatewayDomain: 1,
     aaSupported: true,
     finalitySeconds: 30,
     nativeCurrency: { name: 'AVAX', symbol: 'AVAX', decimals: 18 },
-  },
-  base: {
+  }),
+  base: chain({
     chainId: 8453,
-    rpc: 'https://mainnet.base.org',
+    rpcs: [
+      'https://mainnet.base.org',
+      'https://base.drpc.org',
+      'https://base-rpc.publicnode.com',
+      'https://base-public.nodies.app',
+      'https://1rpc.io/base',
+      'https://base.meowrpc.com',
+      'https://base-mainnet.public.blastapi.io',
+      'https://base.llamarpc.com',
+      'https://base.api.onfinality.io/public',
+      'https://endpoints.omniatech.io/v1/base/mainnet/public',
+      'https://base.rpc.subquery.network/public',
+    ],
     usdc: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913',
     explorer: 'https://basescan.org',
     gatewayDomain: 6,
     aaSupported: true,
     finalitySeconds: 1200,
     nativeCurrency: { name: 'ETH', symbol: 'ETH', decimals: 18 },
-  },
-  optimism: {
+  }),
+  optimism: chain({
     chainId: 10,
-    rpc: 'https://mainnet.optimism.io',
+    rpcs: [
+      'https://mainnet.optimism.io',
+      'https://optimism.drpc.org',
+      'https://optimism-rpc.publicnode.com',
+      'https://optimism-public.nodies.app',
+      'https://1rpc.io/op',
+      'https://optimism.meowrpc.com',
+      'https://optimism-mainnet.public.blastapi.io',
+      'https://optimism.api.onfinality.io/public',
+      'https://endpoints.omniatech.io/v1/op/mainnet/public',
+      'https://optimism.rpc.subquery.network/public',
+    ],
     usdc: '0x0b2C639c533813f4Aa9D7837CAf62653d097Ff85',
     explorer: 'https://optimistic.etherscan.io',
     gatewayDomain: 2,
     aaSupported: true,
     finalitySeconds: 1200,
     nativeCurrency: { name: 'ETH', symbol: 'ETH', decimals: 18 },
-  },
-  arbitrum: {
+  }),
+  arbitrum: chain({
     chainId: 42161,
-    rpc: 'https://arb1.arbitrum.io/rpc',
+    rpcs: [
+      'https://arb1.arbitrum.io/rpc',
+      'https://arbitrum.drpc.org',
+      'https://arbitrum-one-rpc.publicnode.com',
+      'https://arbitrum-one-public.nodies.app',
+      'https://1rpc.io/arb',
+      'https://arbitrum.meowrpc.com',
+      'https://arbitrum-one.public.blastapi.io',
+      'https://endpoints.omniatech.io/v1/arbitrum/one/public',
+      'https://arbitrum.rpc.subquery.network/public',
+    ],
     usdc: '0xaf88d065e77c8cC2239327C5EDb3A432268e5831',
     explorer: 'https://arbiscan.io',
     gatewayDomain: 3,
     aaSupported: true,
     finalitySeconds: 1200,
     nativeCurrency: { name: 'ETH', symbol: 'ETH', decimals: 18 },
-  },
+  }),
 };
 
 /**
@@ -119,6 +185,14 @@ export const ALL_CHAINS: Record<string, ChainConfig> = {
   ...AA_ONLY_CHAINS,
   ...GATEWAY_ONLY_CHAINS,
 };
+
+// Apply env var overrides: RPC_POLYGON=url1,url2 overrides default rpcs
+for (const [key, config] of Object.entries(ALL_CHAINS)) {
+  const envVal = process.env[`RPC_${key.toUpperCase()}`];
+  if (envVal) {
+    config.rpcs = envVal.split(',').map((s) => s.trim()).filter(Boolean);
+  }
+}
 
 export type SupportedChain = keyof typeof ALL_CHAINS;
 export type GatewayChain = keyof typeof GATEWAY_CHAINS;

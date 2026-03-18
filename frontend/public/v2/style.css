@@ -3579,6 +3579,43 @@
     }
 
     /* ============================================
+       PAYOUT BALANCE DETAIL POPUP
+       ============================================ */
+    .payout-balance-detail-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.25);
+      z-index: 9990;
+    }
+    .payout-balance-detail {
+      position: fixed; top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      background: #fff; border-radius: 14px;
+      box-shadow: 0 12px 40px rgba(0,0,0,0.2);
+      z-index: 9991; width: 340px; max-height: 420px;
+      overflow: hidden;
+    }
+    .payout-detail-header {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 14px 18px; font-weight: 700; font-size: 14px;
+      border-bottom: 1px solid #f0f0f5;
+    }
+    .payout-detail-close {
+      cursor: pointer; font-size: 20px; color: #9ca3af; line-height: 1;
+    }
+    .payout-detail-close:hover { color: #111; }
+    .payout-detail-body {
+      padding: 8px 12px; max-height: 340px; overflow-y: auto;
+    }
+    .payout-detail-row {
+      display: flex; align-items: center; gap: 10px;
+      padding: 8px 6px; border-bottom: 1px solid #f8f8fc;
+      font-size: 13px;
+    }
+    .payout-detail-row:last-child { border-bottom: none; }
+    .payout-detail-row img { width: 20px; height: 20px; }
+    .payout-detail-amount { font-weight: 600; }
+    .payout-detail-label { color: #9ca3af; font-size: 11px; margin-left: auto; }
+
+    /* ============================================
        MODE TOGGLE (Demo / Prod)
        ============================================ */
     .mode-toggle {
@@ -3589,18 +3626,23 @@
       display: flex;
       align-items: center;
       gap: 8px;
-      background: rgba(255,255,255,0.92);
-      border: 1px solid #e2e4ea;
+      background: rgba(255,255,255,0.95);
+      border: 2px solid #a78bfa;
       border-radius: 20px;
-      padding: 6px 14px;
-      font-size: 11px;
-      font-weight: 600;
+      padding: 8px 16px;
+      font-size: 12px;
+      font-weight: 700;
       color: #6b7280;
       backdrop-filter: blur(8px);
-      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+      box-shadow: 0 2px 12px rgba(124,58,237,0.25);
       user-select: none;
       cursor: pointer;
-      transition: border-color 0.2s;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      animation: mode-toggle-pulse 2s ease-in-out 3;
+    }
+    @keyframes mode-toggle-pulse {
+      0%, 100% { box-shadow: 0 0 12px rgba(124,58,237,0.25); transform: scale(1); }
+      50% { box-shadow: 0 0 30px rgba(124,58,237,0.7), 0 0 60px rgba(124,58,237,0.3); transform: scale(1.08); }
     }
     .mode-toggle:hover {
       border-color: #a78bfa;

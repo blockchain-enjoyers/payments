@@ -12,6 +12,7 @@ import { signerToEcdsaValidator } from '@zerodev/ecdsa-validator';
 import { KERNEL_V3_1, getEntryPoint, VALIDATOR_TYPE, CALL_TYPE } from '@zerodev/sdk/constants';
 import { ALL_CHAINS, type ChainConfig } from './config/chains';
 import { getZeroDevRpc, getBundlerRpc, PIMLICO_FALLBACK_CHAINS } from './config/bundler';
+import { RpcService } from './rpc.service';
 import type { UserOperationCall } from './gateway/gateway.types';
 
 /** ECDSA Validator contract address for Kernel v3.1+ */
@@ -66,7 +67,10 @@ export interface PreparedUserOpResult {
 export class UserOpService {
   private readonly logger = new Logger(UserOpService.name);
 
-  constructor(private readonly configService: ConfigService) {}
+  constructor(
+    private readonly configService: ConfigService,
+    private readonly rpcService: RpcService,
+  ) {}
 
   /**
    * Build an unsigned UserOp server-side with gas estimation.
@@ -368,7 +372,7 @@ export class UserOpService {
     if (!chainConfig) return false;
 
     try {
-      const client = createPublicClient({ transport: http(chainConfig.rpc) });
+      const client = this.rpcService.getPublicClient(chainKey);
 
       // Check if MSCA has code (is deployed)
       const code = await client.getCode({
@@ -399,7 +403,7 @@ export class UserOpService {
     if (!chainConfig) return false;
 
     try {
-      const client = createPublicClient({ transport: http(chainConfig.rpc) });
+      const client = this.rpcService.getPublicClient(chainKey);
       const code = await client.getCode({ address: mscaAddress as `0x${string}` });
       if (!code || code === '0x') return false;
 
@@ -860,7 +864,7 @@ export class UserOpService {
       name: key.charAt(0).toUpperCase() + key.slice(1),
       nativeCurrency: config.nativeCurrency,
       rpcUrls: {
-        default: { http: [config.rpc] },
+        default: { http: config.rpcs },
       },
     });
   }
@@ -872,10 +876,11 @@ export class UserOpService {
    */
   private feeEstimator(chain: any) {
     return async () => {
-      const chainConfig = Object.values(ALL_CHAINS).find(
-        (c) => c.chainId === chain.id,
-      ) as ChainConfig | undefined;
-      const nativeRpc = chainConfig?.rpc ?? chain.rpcUrls.default.http[0];
+      const chainEntry = Object.entries(ALL_CHAINS).find(
+        ([, c]) => c.chainId === chain.id,
+      );
+      const chainKey = chainEntry?.[0];
+      const chainConfig = chainEntry?.[1];
 
       // 1. Query bundler gas price (Pimlico-specific)
       let bundlerMaxFee = 0n;
@@ -910,17 +915,13 @@ export class UserOpService {
       let chainMaxFee = 0n;
       let chainPriority = 0n;
       try {
-        const feeRes = await fetch(nativeRpc, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            jsonrpc: '2.0',
-            id: 1,
-            method: 'eth_feeHistory',
-            params: ['0x4', 'latest', [50, 75]],
-          }),
-        });
-        const feeData = await feeRes.json();
+        const feeData = chainKey
+          ? await this.rpcService.rpcFetch(chainKey, {
+              jsonrpc: '2.0', id: 1,
+              method: 'eth_feeHistory',
+              params: ['0x4', 'latest', [50, 75]],
+            })
+          : { result: null };
 
         if (feeData.result?.baseFeePerGas?.length) {
           const baseFees = feeData.result.baseFeePerGas.map((f: string) => BigInt(f));
@@ -944,17 +945,12 @@ export class UserOpService {
       // Fallback: legacy eth_gasPrice
       if (chainMaxFee === 0n) {
         try {
-          const fallbackRes = await fetch(nativeRpc, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              jsonrpc: '2.0',
-              id: 1,
-              method: 'eth_gasPrice',
-              params: [],
-            }),
+          if (!chainKey) throw new Error('Unknown chain');
+          const fallbackData = await this.rpcService.rpcFetch(chainKey, {
+            jsonrpc: '2.0', id: 1,
+            method: 'eth_gasPrice',
+            params: [],
           });
-          const fallbackData = await fallbackRes.json();
           const gasPrice = BigInt(fallbackData.result);
           chainMaxFee = gasPrice > 100_000n ? gasPrice * 2n : 100_000n;
           chainPriority = chainMaxFee;
@@ -1092,7 +1088,7 @@ export class UserOpService {
           const PASSKEY_VALIDATOR = '0x7ab16Ff354AcB328452F1D445b3Ddee9a91e9e69' as `0x${string}`;
           const KERNEL_FACTORY = '0xd703aaE79538628d27099B8c4f621bE4CCd142d5' as `0x${string}`;
           try {
-            const nativeCheck = createPublicClient({ transport: http(chainConfig.rpc) });
+            const nativeCheck = this.rpcService.getPublicClient(chainKey);
             const [accountImplCode, implCode, validatorCode, factoryCode] = await Promise.all([
               nativeCheck.getCode({ address: KERNEL_ACCOUNT_IMPL }),
               nativeCheck.getCode({ address: KERNEL_IMPL }),
@@ -1130,7 +1126,7 @@ export class UserOpService {
           const ALT_PAYMASTER = '0x2cc0c7981D846b9F2a16276556f6e8cb52BfB633' as `0x${string}`;
           const ENTRYPOINT_V07 = '0x0000000071727De22E5E9d8BAf0edAc6f37da032' as `0x${string}`;
           try {
-            const nativeClient = createPublicClient({ transport: http(chainConfig.rpc) });
+            const nativeClient = this.rpcService.getPublicClient(chainKey);
             const balanceOfAbi = [{
               name: 'balanceOf', type: 'function', stateMutability: 'view',
               inputs: [{ name: 'account', type: 'address' }],
@@ -1182,7 +1178,7 @@ export class UserOpService {
           //    and check if they have code on this chain
           if (!entry.mscaDeployed) {
             try {
-              const nativeClient = createPublicClient({ transport: http(chainConfig.rpc) });
+              const nativeClient = this.rpcService.getPublicClient(chainKey);
               const validatorCode = await nativeClient.getCode({ address: PASSKEY_VALIDATOR });
 
               if (validatorCode && validatorCode.length > 2) {
@@ -1239,7 +1235,7 @@ export class UserOpService {
 
                 // Check each dependency address on this chain AND on Polygon
                 const deps: Record<string, any> = {};
-                const polygonClient = createPublicClient({ transport: http(ALL_CHAINS['polygon']?.rpc || chainConfig.rpc) });
+                const polygonClient = this.rpcService.getPublicClient('polygon');
 
                 for (const addr of addresses) {
                   try {

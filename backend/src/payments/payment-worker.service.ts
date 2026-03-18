@@ -1,10 +1,11 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Interval } from '@nestjs/schedule';
-import { createPublicClient, http, parseAbiItem } from 'viem';
+import { parseAbiItem } from 'viem';
 import { PrismaService } from '../common/prisma/prisma.service';
 import { PaymentsService } from './payments.service';
 import { PaymentSettlementService } from './payment-settlement.service';
 import { AA_GATEWAY_CHAINS, getUsdcAddress, getTokenAddress } from '../circle/config/chains';
+import { RpcService } from '../circle/rpc.service';
 
 const WORKER_INTERVAL_MS = 30_000;
 
@@ -21,6 +22,7 @@ export class PaymentWorkerService {
     private readonly prisma: PrismaService,
     private readonly paymentsService: PaymentsService,
     private readonly settlementService: PaymentSettlementService,
+    private readonly rpcService: RpcService,
   ) {}
 
   @Interval(WORKER_INTERVAL_MS)
@@ -129,9 +131,7 @@ export class PaymentWorkerService {
     const chainConfig = AA_GATEWAY_CHAINS[group.chain];
     if (!chainConfig) return;
 
-    const client = createPublicClient({
-      transport: http(chainConfig.rpc),
-    });
+    const client = this.rpcService.getPublicClient(group.chain);
 
     const latestBlock = await client.getBlockNumber();
 
@@ -242,9 +242,7 @@ export class PaymentWorkerService {
     const chainConfig = AA_GATEWAY_CHAINS[payment.payerChain];
     if (!chainConfig) return;
 
-    const client = createPublicClient({
-      transport: http(chainConfig.rpc),
-    });
+    const client = this.rpcService.getPublicClient(payment.payerChain);
 
     const receipt = await client.getTransactionReceipt({
       hash: payment.payerTxHash as `0x${string}`,

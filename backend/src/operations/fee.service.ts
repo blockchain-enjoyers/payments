@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { encodeFunctionData } from 'viem';
 import { ALL_CHAINS, getUsdcAddress } from '../circle/config/chains';
+import { RpcService } from '../circle/rpc.service';
 import type { UserOperationCall } from '../circle/gateway/gateway.types';
 
 // ── Gas unit estimates (empirical, conservative) ───────────────────────────
@@ -83,6 +84,8 @@ const ERC20_TRANSFER_ABI = [
 @Injectable()
 export class FeeService {
   private readonly logger = new Logger(FeeService.name);
+
+  constructor(private readonly rpcService: RpcService) {}
 
   // Price cache: coinGeckoId → { priceUsd, fetchedAt }
   private priceCache = new Map<
@@ -207,17 +210,12 @@ export class FeeService {
     if (!chainConfig) return false;
 
     try {
-      const res = await fetch(chainConfig.rpc, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          jsonrpc: '2.0',
-          id: 1,
-          method: 'eth_getCode',
-          params: [walletAddress, 'latest'],
-        }),
+      const data = await this.rpcService.rpcFetch(chain, {
+        jsonrpc: '2.0',
+        id: 1,
+        method: 'eth_getCode',
+        params: [walletAddress, 'latest'],
       });
-      const data = await res.json();
       const code = data.result as string;
       return code !== undefined && code !== '0x' && code.length > 2;
     } catch (err) {
@@ -334,19 +332,14 @@ export class FeeService {
     }
 
     try {
-      const res = await fetch(chainConfig.rpc, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          jsonrpc: '2.0',
-          id: 1,
-          method: 'eth_gasPrice',
-          params: [],
-        }),
+      const data = await this.rpcService.rpcFetch(chain, {
+        jsonrpc: '2.0',
+        id: 1,
+        method: 'eth_gasPrice',
+        params: [],
       });
-      const data = await res.json();
       if (!data.result) {
-        throw new Error(data.error?.message || `No result from eth_gasPrice (HTTP ${res.status})`);
+        throw new Error(data.error?.message || 'No result from eth_gasPrice');
       }
       const gasPrice = BigInt(data.result);
 

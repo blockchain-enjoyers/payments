@@ -1,9 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
 import {
-  createPublicClient,
-  createWalletClient,
-  defineChain,
-  http,
   maxUint256,
   toHex,
 } from 'viem';
@@ -17,6 +13,7 @@ import {
   getDomain,
 } from '../config/gateway';
 import { ALL_CHAINS, GATEWAY_CHAINS } from '../config/chains';
+import { RpcService } from '../rpc.service';
 import { GATEWAY_MINTER_ABI, GATEWAY_WALLET_DELEGATE_ABI } from './gateway.operations';
 import type {
   BurnIntent,
@@ -76,6 +73,8 @@ function parseBalance(balance: string): bigint {
 @Injectable()
 export class GatewayService {
   private readonly logger = new Logger(GatewayService.name);
+
+  constructor(private readonly rpcService: RpcService) {}
 
   async getBalance(depositorAddress: string): Promise<ParsedBalance[]> {
     const sources = Object.entries(GATEWAY_DOMAINS).map(([, domain]) => ({
@@ -266,9 +265,7 @@ export class GatewayService {
     const chain = ALL_CHAINS[chainKey];
     if (!chain) throw new Error(`Unknown chain: ${chainKey}`);
 
-    const client = createPublicClient({
-      transport: http(chain.rpc),
-    });
+    const client = this.rpcService.getPublicClient(chainKey);
 
     try {
       const balance = await client.readContract({
@@ -302,9 +299,7 @@ export class GatewayService {
     const chain = ALL_CHAINS[chainKey];
     if (!chain) throw new Error(`Unknown chain: ${chainKey}`);
 
-    const client = createPublicClient({
-      transport: http(chain.rpc),
-    });
+    const client = this.rpcService.getPublicClient(chainKey);
 
     try {
       const balance = await client.readContract({
@@ -338,9 +333,7 @@ export class GatewayService {
     const chain = ALL_CHAINS[chainKey];
     if (!chain) throw new Error(`Unknown chain: ${chainKey}`);
 
-    const client = createPublicClient({
-      transport: http(chain.rpc),
-    });
+    const client = this.rpcService.getPublicClient(chainKey);
 
     try {
       return await client.readContract({
@@ -374,18 +367,7 @@ export class GatewayService {
       relayerPrivateKey as `0x${string}`,
     );
 
-    const viemChain = defineChain({
-      id: chain.chainId,
-      name: destinationChain,
-      nativeCurrency: chain.nativeCurrency,
-      rpcUrls: { default: { http: [chain.rpc] } },
-    });
-
-    const client = createWalletClient({
-      account,
-      chain: viemChain,
-      transport: http(chain.rpc),
-    });
+    const client = this.rpcService.getWalletClient(destinationChain, account) as any;
 
     this.logger.log(
       `Executing mint on ${destinationChain} via relayer ${account.address}`,

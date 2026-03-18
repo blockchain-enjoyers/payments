@@ -4,7 +4,7 @@ import {
   BadRequestException,
   Logger,
 } from '@nestjs/common';
-import { createPublicClient, http } from 'viem';
+import { RpcService } from '../circle/rpc.service';
 import { Prisma } from '../generated/prisma/client';
 import { PrismaService } from '../common/prisma/prisma.service';
 import { CircleService } from '../circle/circle.service';
@@ -37,6 +37,7 @@ export class WalletService {
     private readonly prisma: PrismaService,
     private readonly circleService: CircleService,
     private readonly userOpService: UserOpService,
+    private readonly rpcService: RpcService,
   ) {
     // Purge stale entries every 60s
     setInterval(() => {
@@ -223,9 +224,7 @@ export class WalletService {
     );
 
     // Verify delegate is actually registered on the Gateway contract
-    const client = createPublicClient({
-      transport: http(chainConfig.rpc),
-    });
+    const client = this.rpcService.getPublicClient(dto.chain);
 
     let isAuthorized = false;
     try {
@@ -627,7 +626,7 @@ export class WalletService {
     // Step 4: Verify delegate and mark confirmed
     let isAuthorized = false;
     try {
-      const client = createPublicClient({ transport: http(chainConfig.rpc) });
+      const client = this.rpcService.getPublicClient(dto.chain);
       isAuthorized = await client.readContract({
         address: GATEWAY_WALLET as `0x${string}`,
         abi: GATEWAY_WALLET_DELEGATE_ABI,

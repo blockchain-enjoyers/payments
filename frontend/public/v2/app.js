@@ -103,7 +103,7 @@
       el = document.getElementById('payout-result-total-meta');
       if (el) el.textContent = '';
       if (typeof payoutState !== 'undefined') {
-        payoutState.recipients = [];
+        payoutState.recipients = [{ address: '', amount: '', token: 'USDC', chain: 'Base' }];
         payoutState.memo = '';
         payoutState.balance = 0;
         if (typeof payoutRenderRecipients === 'function') payoutRenderRecipients();
@@ -151,10 +151,14 @@
 
     async function restoreSession() {
       try {
-        var user = await apiGet('auth/me');
+        var results = await Promise.all([
+          apiGet('auth/me'),
+          isProd() ? apiGet('wallet/balances').catch(function() { return null; }) : Promise.resolve(null)
+        ]);
+        var user = results[0];
         CURRENT_USER = user;
         isAuthenticated = true;
-        applyAuthUI(user);
+        applyAuthUI(user, results[1]);
       } catch (e) {
         AUTH_TOKEN = null;
         CURRENT_USER = null;
@@ -163,7 +167,18 @@
       }
     }
 
-    function applyAuthUI(user) {
+    function copyWalletAddress() {
+      var addr = CURRENT_USER && (CURRENT_USER.smartAccountAddress || CURRENT_USER.walletAddress);
+      if (!addr) return;
+      navigator.clipboard.writeText(addr).then(function() {
+        var pill = document.getElementById('wallet-pill');
+        var original = pill.innerHTML;
+        pill.innerHTML = 'Copied!';
+        setTimeout(function() { pill.innerHTML = original; }, 1500);
+      });
+    }
+
+    function applyAuthUI(user, prefetchedBalances) {
       document.getElementById('nav-connect').style.display = 'none';
       document.getElementById('wallet-pill').style.display = 'flex';
       if (user && user.smartAccountAddress) {
@@ -174,10 +189,15 @@
       }
       document.getElementById('main').classList.add('auth-active');
       document.getElementById('activity').style.display = 'block';
+      topupUpdateDestinationAddress();
 
       // Update balance in nav + dashboard + payout + settings if on that page
       if (isProd()) {
-        loadProdDashboard();
+        if (prefetchedBalances) {
+          renderProdDashboard(prefetchedBalances);
+        } else {
+          loadProdDashboard();
+        }
         var currentHash = location.hash.slice(1) || 'home';
         if (currentHash === 'settings') loadSettingsPage();
       } else {
@@ -287,8 +307,8 @@
       }
     }
 
-    window.addEventListener('hashchange', handleRoute);
-    window.addEventListener('DOMContentLoaded', handleRoute);
+    window.addEventListener('hashchange', function() { handleRoute(); });
+    window.addEventListener('DOMContentLoaded', function() { handleRoute(); });
 
     // ============================================
     // AUTH MODAL
@@ -566,7 +586,23 @@
     // TOP UP VIEW
     // ============================================
     const TOPUP_RATES = { USDC: 1, USDT: 1, DAI: 1 };
-    const TOPUP_BALANCES = { USDC: '2,450', USDT: '1,200', DAI: '500' };
+
+    const TOPUP_CHAIN_IDS = {
+      Polygon: 137, Avalanche: 43114, Base: 8453, Optimism: 10, Arbitrum: 42161
+    };
+    const TOPUP_TOKEN_ADDRESSES = {
+      USDC: { Polygon: '0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359', Avalanche: '0xB97EF9Ef8734C71904D8002F8b6Bc66Dd9c48a6E', Base: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913', Optimism: '0x0b2C639c533813f4Aa9D7837CAf62653d097Ff85', Arbitrum: '0xaf88d065e77c8cC2239327C5EDb3A432268e5831' },
+      USDT: { Polygon: '0xc2132D05D31c914a87C6611C10748AEb04B58e8F', Avalanche: '0x9702230A8Ea53601f5cD2dc00fDBc13d4dF4A8c7', Base: '0xfde4C96c8593536E31F229EA8f37b2ADa2699bb2', Optimism: '0x94b008aA00579c1307B0EF2c499aD98a8ce58e58', Arbitrum: '0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9' },
+      DAI:  { Polygon: '0x8f3Cf7ad23Cd3CaDbD9735AFf958023239c6A063', Avalanche: '0xd586E7F844cEa2F87f50152665BCbc2C279D8d70', Base: '0x50c5725949A6F0c72E6C4a641F24049A917DB0Cb', Optimism: '0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1', Arbitrum: '0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1' }
+    };
+    const TOPUP_TOKEN_DECIMALS = { USDC: 6, USDT: 6, DAI: 18 };
+    const TOPUP_EXPLORERS = {
+      Polygon: 'https://polygonscan.com/tx/', Avalanche: 'https://snowtrace.io/tx/',
+      Base: 'https://basescan.org/tx/', Optimism: 'https://optimistic.etherscan.io/tx/',
+      Arbitrum: 'https://arbiscan.io/tx/'
+    };
+
+    var _topupExternalWallet = null; // connected external wallet address
 
     const topupSelected = {
       chain: { value: 'Base', icon: 'icons/chains/base.svg' },
@@ -600,15 +636,70 @@
       });
     }
 
-    // Connect external wallet (state toggle)
-    function topupConnectWallet() {
-      document.getElementById('topup-state-connect').style.display = 'none';
-      document.getElementById('topup-state-form').style.display = 'block';
+    // Connect external wallet via MetaMask / injected provider
+    async function topupConnectWallet() {
+      if (!window.ethereum) {
+        alert('No wallet detected. Please install MetaMask or another Web3 wallet.');
+        return;
+      }
+      try {
+        var accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+        if (!accounts || accounts.length === 0) return;
+        _topupExternalWallet = accounts[0];
+        document.querySelector('.source-wallet-address').textContent =
+          '\u00B7 ' + _topupExternalWallet.slice(0, 6) + '...' + _topupExternalWallet.slice(-4);
+        // Detect wallet name
+        var walletName = window.ethereum.isMetaMask ? 'MetaMask' : (window.ethereum.isRabby ? 'Rabby' : 'Wallet');
+        document.querySelector('.source-wallet-label').textContent = walletName;
+        document.getElementById('topup-state-connect').style.display = 'none';
+        document.getElementById('topup-state-form').style.display = 'block';
+        // Update balance for selected token
+        topupRefreshBalance();
+      } catch (e) {
+        console.error('Wallet connect failed:', e);
+      }
     }
 
     function topupDisconnectWallet() {
+      _topupExternalWallet = null;
       document.getElementById('topup-state-form').style.display = 'none';
       document.getElementById('topup-state-connect').style.display = 'block';
+      document.getElementById('topup-balance-hint').textContent = '';
+    }
+
+    // Fetch real ERC-20 balance from external wallet
+    async function topupRefreshBalance() {
+      if (!_topupExternalWallet || !window.ethereum) return;
+      var chain = topupSelected.chain.value;
+      var token = topupSelected.token.value;
+      var tokenAddr = (TOPUP_TOKEN_ADDRESSES[token] || {})[chain];
+      var decimals = TOPUP_TOKEN_DECIMALS[token] || 6;
+      if (!tokenAddr) { document.getElementById('topup-balance-hint').textContent = 'Token not available on ' + chain; return; }
+
+      try {
+        // Switch chain if needed
+        var targetChainId = '0x' + TOPUP_CHAIN_IDS[chain].toString(16);
+        var currentChainId = await window.ethereum.request({ method: 'eth_chainId' });
+        if (currentChainId !== targetChainId) {
+          try {
+            await window.ethereum.request({ method: 'wallet_switchEthereumChain', params: [{ chainId: targetChainId }] });
+          } catch (switchErr) {
+            document.getElementById('topup-balance-hint').textContent = 'Switch to ' + chain + ' in your wallet';
+            return;
+          }
+        }
+
+        // balanceOf(address) → ERC-20
+        var balData = '0x70a08231000000000000000000000000' + _topupExternalWallet.slice(2).toLowerCase();
+        var result = await window.ethereum.request({ method: 'eth_call', params: [{ to: tokenAddr, data: balData }, 'latest'] });
+        var rawBal = BigInt(result);
+        var formatted = Number(rawBal) / Math.pow(10, decimals);
+        document.getElementById('topup-balance-hint').textContent =
+          'Balance: ' + formatted.toLocaleString('en-US', { maximumFractionDigits: decimals > 6 ? 4 : 2 }) + ' ' + token;
+      } catch (e) {
+        console.error('Balance fetch failed:', e);
+        document.getElementById('topup-balance-hint').textContent = 'Could not fetch balance';
+      }
     }
 
     // Dropdown logic
@@ -648,6 +739,7 @@
       // Update destination label
       document.getElementById('topup-destination-label').textContent = 'Your OmniFlow on ' + value;
       topupCloseAllDropdowns();
+      topupRefreshBalance();
     }
 
     // Token selector
@@ -658,10 +750,9 @@
       document.querySelectorAll('#topup-token-dropdown .dropdown-option').forEach(opt => {
         opt.classList.toggle('selected', opt.dataset.value === value);
       });
-      // Update balance hint
-      document.getElementById('topup-balance-hint').textContent = 'Balance: ' + (TOPUP_BALANCES[value] || '0') + ' ' + value;
       topupUpdateConversion();
       topupCloseAllDropdowns();
+      topupRefreshBalance();
     }
 
     // Update conversion label
@@ -680,28 +771,95 @@
       label.textContent = '\u2248 $' + usdAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     }
 
-    // Handle top up
-    function topupHandleTopUp() {
+    // Handle top up — real ERC-20 transfer
+    async function topupHandleTopUp() {
       if (!isAuthenticated) {
-        openAuthModal(function() { topupShowSuccess(); });
+        openAuthModal(function() { topupHandleTopUp(); });
         return;
       }
-      topupShowSuccess();
+      if (!_topupExternalWallet || !window.ethereum) {
+        alert('Please connect your wallet first.');
+        return;
+      }
+      var recipient = CURRENT_USER && (CURRENT_USER.smartAccountAddress || CURRENT_USER.walletAddress);
+      if (!recipient) {
+        alert('Wallet address not found. Please re-login.');
+        return;
+      }
+
+      var chain = topupSelected.chain.value;
+      var token = topupSelected.token.value;
+      var amount = parseFloat(document.getElementById('topup-amount-input').value) || 0;
+      if (amount <= 0) { alert('Enter an amount.'); return; }
+
+      var tokenAddr = (TOPUP_TOKEN_ADDRESSES[token] || {})[chain];
+      var decimals = TOPUP_TOKEN_DECIMALS[token] || 6;
+      if (!tokenAddr) { alert(token + ' is not available on ' + chain); return; }
+
+      // Switch chain if needed
+      var targetChainId = '0x' + TOPUP_CHAIN_IDS[chain].toString(16);
+      try {
+        var currentChainId = await window.ethereum.request({ method: 'eth_chainId' });
+        if (currentChainId !== targetChainId) {
+          await window.ethereum.request({ method: 'wallet_switchEthereumChain', params: [{ chainId: targetChainId }] });
+        }
+      } catch (e) {
+        alert('Please switch to ' + chain + ' in your wallet.');
+        return;
+      }
+
+      // Build ERC-20 transfer(address,uint256) calldata
+      var rawAmount = BigInt(Math.round(amount * Math.pow(10, decimals)));
+      var amountHex = rawAmount.toString(16).padStart(64, '0');
+      var toHex = recipient.slice(2).toLowerCase().padStart(64, '0');
+      var data = '0xa9059cbb' + toHex + amountHex;
+
+      // Update button state
+      var btn = document.querySelector('.btn-topup');
+      var originalBtnHtml = btn.innerHTML;
+      btn.innerHTML = 'Confirm in wallet...';
+      btn.disabled = true;
+
+      try {
+        var txHash = await window.ethereum.request({
+          method: 'eth_sendTransaction',
+          params: [{
+            from: _topupExternalWallet,
+            to: tokenAddr,
+            data: data
+          }]
+        });
+        topupShowSuccess(amount, token, chain, txHash);
+      } catch (e) {
+        console.error('Top up failed:', e);
+        if (e.code !== 4001) alert('Transaction failed: ' + (e.message || e));
+      } finally {
+        btn.innerHTML = originalBtnHtml;
+        btn.disabled = false;
+      }
     }
 
-    function topupShowSuccess() {
-      const amount = document.getElementById('topup-amount-input').value || '0';
-      const token = topupSelected.token.value;
-      const decimals = (token === 'ETH' || token === 'WBTC') ? 6 : 2;
-
+    function topupShowSuccess(amount, token, chain, txHash) {
+      var decimals = (TOPUP_TOKEN_DECIMALS[token] || 6) > 6 ? 4 : 2;
       document.getElementById('topup-success-amount').textContent =
         parseFloat(amount).toFixed(decimals) + ' ' + token;
       document.getElementById('topup-success-chain-icon').src = resolveIcon(topupSelected.chain.icon);
-      document.getElementById('topup-success-chain-icon').alt = topupSelected.chain.value;
-      document.getElementById('topup-success-chain-text').textContent = 'via ' + topupSelected.chain.value;
+      document.getElementById('topup-success-chain-icon').alt = chain;
+      document.getElementById('topup-success-chain-text').textContent = 'via ' + chain;
+
+      // Show real tx hash with explorer link
+      var txEl = document.querySelector('#topup-success-card .success-tx-hash');
+      if (txEl && txHash) {
+        var explorer = TOPUP_EXPLORERS[chain] || '';
+        txEl.innerHTML = '<a href="' + explorer + txHash + '" target="_blank" style="color:#a78bfa;text-decoration:none;">' +
+          txHash.slice(0, 8) + '...' + txHash.slice(-6) + '</a>';
+      }
 
       document.getElementById('topup-card').style.display = 'none';
       document.getElementById('topup-success-card').style.display = 'block';
+
+      // Refresh dashboard balance after a short delay
+      setTimeout(function() { if (isProd()) loadProdDashboard(); }, 3000);
     }
 
     function topupShowForm() {
@@ -709,10 +867,17 @@
       document.getElementById('topup-card').style.display = 'block';
     }
 
+    function topupUpdateDestinationAddress() {
+      var addr = CURRENT_USER && (CURRENT_USER.smartAccountAddress || CURRENT_USER.walletAddress);
+      var el = document.getElementById('topup-destination-address');
+      if (el && addr) el.textContent = addr.slice(0, 6) + '...' + addr.slice(-4);
+    }
+
     // Init topup icons and conversion on DOMContentLoaded
     window.addEventListener('DOMContentLoaded', () => {
       topupInitIcons();
       topupUpdateConversion();
+      topupUpdateDestinationAddress();
     });
 
     // ============================================
@@ -1175,6 +1340,33 @@
     }
 
     // ============================================
+    // PAYOUT — BALANCE DETAIL POPUP
+    // ============================================
+    var _payoutBalanceDetails = [];
+
+    function openPayoutBalanceDetail() {
+      if (_payoutBalanceDetails.length === 0) return;
+      var body = document.getElementById('payout-balance-detail-body');
+      body.innerHTML = _payoutBalanceDetails.map(function(d) {
+        var iconHtml = d.icon ? '<img src="' + resolveIcon(d.icon) + '" alt="' + d.token + '">' : '';
+        return '<div class="payout-detail-row">' +
+          iconHtml +
+          '<span class="payout-detail-amount">' +
+            d.amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) +
+            ' ' + d.token +
+          '</span>' +
+          '<span class="payout-detail-label">' + d.label + '</span>' +
+        '</div>';
+      }).join('');
+      document.getElementById('payout-balance-detail-overlay').style.display = 'block';
+      document.getElementById('payout-balance-detail').style.display = 'block';
+    }
+
+    function closePayoutBalanceDetail() {
+      document.getElementById('payout-balance-detail-overlay').style.display = 'none';
+      document.getElementById('payout-balance-detail').style.display = 'none';
+    }
+
     // PAYOUT — STATE & DATA
     // ============================================
     var PAYOUT_TOKENS = {
@@ -1193,13 +1385,15 @@
     };
 
     var payoutState = {
-      balance: 15730,
-      recipients: [
-        { address: '0x1a2B3c4D5e6F7890aBcDeF1234567890abCDeF12', amount: '500',  token: 'USDC', chain: 'Base' },
-        { address: '0x3c4D5e6F7890AbCdEf1234567890aBcDeF345678', amount: '0.1',   token: 'ETH',  chain: 'Arbitrum' },
-        { address: '0x7e8F9a0B1c2D3e4F5a6B7c8D9e0F1a2B3c4D9A01', amount: '1200', token: 'USDC', chain: 'Optimism' }
-      ],
-      memo: 'March 2026 Payroll'
+      balance: isProd() ? 0 : 15730,
+      recipients: isProd()
+        ? [{ address: '', amount: '', token: 'USDC', chain: 'Base' }]
+        : [
+            { address: '0x1a2B3c4D5e6F7890aBcDeF1234567890abCDeF12', amount: '500',  token: 'USDC', chain: 'Base' },
+            { address: '0x3c4D5e6F7890AbCdEf1234567890aBcDeF345678', amount: '0.1',   token: 'ETH',  chain: 'Arbitrum' },
+            { address: '0x7e8F9a0B1c2D3e4F5a6B7c8D9e0F1a2B3c4D9A01', amount: '1200', token: 'USDC', chain: 'Optimism' }
+          ],
+      memo: ''
     };
 
     // ============================================
@@ -1994,14 +2188,23 @@
     // ============================================
     // PROD MODE — DASHBOARD DATA
     // ============================================
+    function renderProdDashboard(data) {
+      if (!data) return;
+      var totalUsd = parseFloat(data.total || 0);
+      _renderProdDashboardInner(data, totalUsd);
+    }
+
     async function loadProdDashboard() {
       if (!isProd() || !isAuthenticated) return;
       try {
         var data = await apiGet('wallet/balances');
-        if (!data) return;
+        renderProdDashboard(data);
+      } catch (e) {
+        console.error('Failed to load dashboard data:', e);
+      }
+    }
 
-        // API returns { total, gatewayBalances: {chain: amount}, onChainBalances: {chain: {TOKEN: {symbol,balance,decimals}}} }
-        var totalUsd = parseFloat(data.total || 0);
+    function _renderProdDashboardInner(data, totalUsd) {
         var chainTotals = {};
         // Merge on-chain balances (multi-token per chain)
         if (data.onChainBalances) {
@@ -2037,59 +2240,37 @@
         _payoutBalanceData = data;
         payoutUpdateSourceBalance();
 
-        // Update payout balance breakdown (per-chain, per-token chips)
-        var breakdownEl = document.getElementById('payout-balance-breakdown');
-        if (breakdownEl) {
-          var TOKEN_ICONS = {
-            USDC: 'icons/tokens/usdc.svg', USDT: 'icons/tokens/usdt.svg', DAI: 'icons/tokens/dai.svg'
-          };
-          var CHAIN_LABELS = {
-            polygon: 'Polygon', base: 'Base', arbitrum: 'Arbitrum',
-            optimism: 'Optimism', avalanche: 'Avalanche', ethereum: 'Ethereum'
-          };
-          var chips = [];
-
-          // Gateway balances (USDC only)
-          if (data.gatewayBalances) {
-            Object.entries(data.gatewayBalances).forEach(function(e) {
-              var chain = e[0], amt = parseFloat(e[1] || 0);
-              if (amt > 0.001) {
-                chips.push({ chain: chain, token: 'USDC', amount: amt, source: 'gateway' });
-              }
-            });
-          }
-
-          // On-chain balances (multi-token)
-          if (data.onChainBalances) {
-            Object.entries(data.onChainBalances).forEach(function(e) {
-              var chain = e[0], tokens = e[1];
-              Object.values(tokens).forEach(function(tb) {
-                var amt = parseFloat(tb.balance || 0);
-                if (amt > 0.001) {
-                  chips.push({ chain: chain, token: tb.symbol, amount: amt, source: 'wallet' });
-                }
+        // Store detailed balance data for the popup
+        _payoutBalanceDetails = [];
+        var DETAIL_TOKEN_ICONS = {
+          USDC: 'icons/tokens/usdc.svg', USDT: 'icons/tokens/usdt.svg',
+          DAI: 'icons/tokens/dai.svg', WETH: 'icons/tokens/eth.svg',
+          WBTC: 'icons/tokens/wbtc.svg'
+        };
+        var DETAIL_CHAIN_LABELS = {
+          polygon: 'Polygon', base: 'Base', arbitrum: 'Arbitrum',
+          optimism: 'Optimism', avalanche: 'Avalanche'
+        };
+        if (data.gatewayBalances) {
+          Object.entries(data.gatewayBalances).forEach(function(e) {
+            var amt = parseFloat(e[1] || 0);
+            if (amt >= 0.01) _payoutBalanceDetails.push({ token: 'USDC', amount: amt, label: 'Gateway', icon: DETAIL_TOKEN_ICONS.USDC });
+          });
+        }
+        if (data.onChainBalances) {
+          Object.entries(data.onChainBalances).forEach(function(e) {
+            var chain = e[0], tokens = e[1];
+            Object.values(tokens).forEach(function(tb) {
+              var amt = parseFloat(tb.balance || 0);
+              if (amt >= 0.01) _payoutBalanceDetails.push({
+                token: tb.symbol, amount: amt,
+                label: DETAIL_CHAIN_LABELS[chain] || chain,
+                icon: DETAIL_TOKEN_ICONS[tb.symbol] || ''
               });
             });
-          }
-
-          if (chips.length > 0) {
-            breakdownEl.style.display = 'flex';
-            breakdownEl.innerHTML = chips.map(function(c) {
-              var tokenIcon = TOKEN_ICONS[c.token] || '';
-              var chainLabel = CHAIN_LABELS[c.chain] || c.chain;
-              var iconHtml = tokenIcon ? '<img src="' + resolveIcon(tokenIcon) + '" alt="' + c.token + '">' : '';
-              var label = c.source === 'gateway' ? 'Gateway' : chainLabel;
-              return '<div class="payout-bal-chip">' +
-                iconHtml +
-                c.amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) +
-                ' ' + c.token +
-                ' <span class="bal-chain">' + label + '</span>' +
-                '</div>';
-            }).join('');
-          } else {
-            breakdownEl.style.display = 'none';
-          }
+          });
         }
+        _payoutBalanceDetails.sort(function(a, b) { return b.amount - a.amount; });
 
         // Update chain chips
         var chipContainer = document.querySelector('#view-dashboard .chain-chips');
@@ -2108,9 +2289,6 @@
             return '<div class="chain-chip"><img src="' + resolveIcon(icon) + '" alt="' + label + '"> $' + val.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 }) + '</div>';
           }).join('');
         }
-      } catch (e) {
-        console.error('Failed to load dashboard data:', e);
-      }
     }
 
     // Refresh dashboard when navigating to it in prod mode
