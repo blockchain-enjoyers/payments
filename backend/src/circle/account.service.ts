@@ -15,7 +15,7 @@ import { RpcService } from './rpc.service';
 import type { UserOperationCall } from './gateway/gateway.types';
 
 /** ECDSA Validator contract address for Kernel v3.1+ */
-import { ECDSA_VALIDATOR_ADDRESS } from './userop.service';
+export const ECDSA_VALIDATOR_ADDRESS = '0x845ADb2C711129d4f3966735eD98a9F09fC4cE57';
 
 /** ERC-7579 module type for validators */
 const MODULE_TYPE_VALIDATOR = 1n;

@@ -8,11 +8,11 @@ import { signerToEcdsaValidator } from '@zerodev/ecdsa-validator';
 import { KERNEL_V3_1, getEntryPoint } from '@zerodev/sdk/constants';
 import { ALL_CHAINS } from './config/chains';
 import { getZeroDevRpc, getBundlerRpc } from './config/bundler';
-import { AccountService } from './account.service';
+import { AccountService, ECDSA_VALIDATOR_ADDRESS } from './account.service';
 import type { UserOperationCall } from './gateway/gateway.types';
 
-/** ECDSA Validator contract address for Kernel v3.1+ */
-export const ECDSA_VALIDATOR_ADDRESS = '0x845ADb2C711129d4f3966735eD98a9F09fC4cE57';
+// Re-export for backward compatibility
+export { ECDSA_VALIDATOR_ADDRESS };
 
 /**
  * Per-chain max fee caps (in wei). Reject UserOps exceeding these limits
