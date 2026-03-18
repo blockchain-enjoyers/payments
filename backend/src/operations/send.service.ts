@@ -11,6 +11,7 @@ import { CircleService } from '../circle/circle.service';
 import { GatewayService } from '../circle/gateway/gateway.service';
 import { LifiService } from '../lifi/lifi.service';
 import { AuthService } from '../auth/auth.service';
+import { InsufficientBalanceError } from '../common/exceptions';
 import {
   AA_GATEWAY_CHAINS,
   ALL_CHAINS,
@@ -98,8 +99,11 @@ export class SendService {
       sourceChain, sourceTokenAddress, user.walletAddress,
     );
     if (onChainSourceBalance < totalRaw + feeRaw) {
-      throw new BadRequestException(
-        `Insufficient ${sourceTokenSymbol} on ${sourceChain}: have ${formatUnits(onChainSourceBalance, sourceDecimals)}, need ${formatUnits(totalRaw + feeRaw, sourceDecimals)}`,
+      throw new InsufficientBalanceError(
+        sourceChain,
+        sourceTokenSymbol,
+        formatUnits(onChainSourceBalance, sourceDecimals),
+        formatUnits(totalRaw + feeRaw, sourceDecimals),
       );
     }
 
@@ -126,8 +130,11 @@ export class SendService {
             sourceChain, user.walletAddress,
           );
           if (onChainUsdc + gatewayBalance < requiredBalance) {
-            throw new BadRequestException(
-              `Insufficient USDC on ${sourceChain} for cross-chain: on-chain ${formatUnits(onChainUsdc, USDC_DECIMALS)} + Gateway ${formatUnits(gatewayBalance, USDC_DECIMALS)} = ${formatUnits(onChainUsdc + gatewayBalance, USDC_DECIMALS)} USDC, need ~${formatUnits(requiredBalance, USDC_DECIMALS)} USDC`,
+            throw new InsufficientBalanceError(
+              sourceChain,
+              'USDC',
+              formatUnits(onChainUsdc + gatewayBalance, USDC_DECIMALS),
+              formatUnits(requiredBalance, USDC_DECIMALS),
             );
           }
           depositAmount = onChainUsdc < shortfall ? onChainUsdc : shortfall;

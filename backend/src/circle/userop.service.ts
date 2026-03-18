@@ -554,8 +554,9 @@ export class UserOpService {
           params: [opHash],
         });
         if (receipt) return receipt;
-      } catch {
+      } catch (e: any) {
         // Not found yet — keep polling
+        this.logger.debug(`eth_getUserOperationReceipt not ready for ${opHash}`, e?.message);
       }
 
       await new Promise((resolve) => setTimeout(resolve, interval));
