@@ -17,47 +17,10 @@ import {
   isAttestationExpired,
 } from '../circle/gateway/gateway.errors';
 import { effectiveSwapSlippage } from '../operations/helpers/fee.util';
+import { SettlementPhase, SettlementState } from './types/settlement.types';
+import { getSettlement, updateSettlement } from './helpers/metadata.helper';
 
-/**
- * Settlement phases for cross-chain / cross-token payments.
- *
- * Full flow (worst case: different token + different chain):
- *   SWAP_TO_USDC → APPROVE_DEPOSIT → BURN_INTENT → MINT → SWAP_TO_MERCHANT_TOKEN → COMPLETED
- *
- * Same token, cross-chain:
- *   APPROVE_DEPOSIT → BURN_INTENT → MINT → COMPLETED
- *
- * Different token, same chain:
- *   SWAP_TO_MERCHANT_TOKEN → COMPLETED
- */
-export type SettlementPhase =
-  | 'SWAP_TO_USDC'            // Swap payer's non-USDC token → USDC on source chain
-  | 'APPROVE_DEPOSIT'         // Approve + deposit USDC to Gateway on source chain
-  | 'BURN_INTENT'             // Submit burn intent (delegate EIP-712 signature)
-  | 'MINT'                    // Execute mint on destination chain
-  | 'SWAP_TO_MERCHANT_TOKEN'  // Swap USDC → merchant's requested token on dest chain
-  | 'COMPLETED'
-  | 'FAILED';
-
-interface SettlementState {
-  [key: string]: unknown;
-  phase: SettlementPhase;
-  sourceChain: string;
-  destChain: string;
-  amount: string;              // raw amount in payer's token
-  usdcAmount?: string;         // raw USDC amount (after swap or = amount if USDC)
-  payerToken: string;          // token the payer sent (e.g. 'WETH')
-  merchantToken: string;       // token the merchant wants (e.g. 'USDC')
-  depositTxHash?: string;
-  swapToUsdcTxHash?: string;
-  swapToMerchantTxHash?: string;
-  mintedAmount?: string;         // raw USDC minted on dest chain (after gateway fee)
-  attestation?: string;
-  operatorSignature?: string;
-  mintTxHash?: string;
-  error?: string;
-  retries: number;
-}
+export type { SettlementPhase, SettlementState };
 
 const MAX_RETRIES = 10;
 
@@ -91,7 +54,7 @@ export class PaymentSettlementService {
     const payment = await this.prisma.payment.findUnique({
       where: { id: paymentId },
     });
-    if ((payment?.metadata as any)?.settlement) {
+    if (getSettlement(payment ?? {})) {
       this.logger.log(`Settlement already exists for payment ${paymentId}, skipping init`);
       return;
     }
@@ -149,10 +112,8 @@ export class PaymentSettlementService {
     });
 
     for (const payment of payments) {
-      const metadata = payment.metadata as any;
-      if (!metadata?.settlement) continue;
-
-      const settlement = metadata.settlement as SettlementState;
+      const settlement = getSettlement(payment);
+      if (!settlement) continue;
 
       try {
         await this.processSettlement(payment, settlement);
@@ -170,13 +131,13 @@ export class PaymentSettlementService {
             data: {
               status: 'FAILED',
               errorMessage: `Settlement failed after ${MAX_RETRIES} retries: ${error.message}`,
-              metadata: { settlement } as any,
+              metadata: updateSettlement(payment.metadata, settlement) as any,
             },
           });
         } else {
           await this.prisma.payment.update({
             where: { id: payment.id },
-            data: { metadata: { settlement } as any },
+            data: { metadata: updateSettlement(payment.metadata, settlement) as any },
           });
         }
       }
