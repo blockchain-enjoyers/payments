@@ -17,36 +17,19 @@ import { PrepareDelegateDto } from './dto/prepare-delegate.dto';
 import { SubmitDelegateDto } from './dto/submit-delegate.dto';
 import { PrepareUserOpDto } from './dto/prepare-userop.dto';
 import { SubmitUserOpDto } from './dto/submit-userop.dto';
-
-/** In-memory store for prepared UserOps awaiting signature (short-lived, ~10s TTL) */
-interface PendingUserOp {
-  userId: string;
-  chain: string;
-  unsignedUserOp: Record<string, any>;
-  entryPointAddress: string;
-  entryPointVersion: string;
-  createdAt: number;
-}
+import { UserOpCacheService } from './userop-cache.service';
 
 @Injectable()
 export class WalletService {
   private readonly logger = new Logger(WalletService.name);
-  private readonly pendingUserOps = new Map<string, PendingUserOp>();
 
   constructor(
     private readonly prisma: PrismaService,
     private readonly circleService: CircleService,
     private readonly userOpService: UserOpService,
     private readonly rpcService: RpcService,
-  ) {
-    // Purge stale entries every 60s
-    setInterval(() => {
-      const now = Date.now();
-      for (const [id, entry] of this.pendingUserOps) {
-        if (now - entry.createdAt > 120_000) this.pendingUserOps.delete(id);
-      }
-    }, 60_000);
-  }
+    private readonly cache: UserOpCacheService,
+  ) {}
 
   async getWalletInfo(userId: string) {
     const user = await this.prisma.user.findUnique({
@@ -287,13 +270,12 @@ export class WalletService {
     );
 
     const requestId = crypto.randomUUID();
-    this.pendingUserOps.set(requestId, {
+    this.cache.store(requestId, {
       userId,
       chain: dto.chain,
       unsignedUserOp: prepared.unsignedUserOp,
       entryPointAddress: prepared.entryPointAddress,
       entryPointVersion: prepared.entryPointVersion,
-      createdAt: Date.now(),
     });
 
     return {
@@ -304,7 +286,7 @@ export class WalletService {
   }
 
   async submitGenericUserOp(userId: string, dto: SubmitUserOpDto) {
-    const pending = this.pendingUserOps.get(dto.requestId);
+    const pending = this.cache.get(dto.requestId);
     if (!pending) {
       throw new NotFoundException(
         'Prepared UserOp not found or expired — call POST /v1/wallet/userop/prepare first',
@@ -316,7 +298,7 @@ export class WalletService {
     }
 
     // Remove from store immediately (one-shot use)
-    this.pendingUserOps.delete(dto.requestId);
+    this.cache.remove(dto.requestId);
 
     const txHash = await this.userOpService.submitUserOp(
       pending.chain,
@@ -394,13 +376,12 @@ export class WalletService {
         uninstallCalls,
       );
       uninstallRequestId = crypto.randomUUID();
-      this.pendingUserOps.set(uninstallRequestId, {
+      this.cache.store(uninstallRequestId, {
         userId,
         chain: dto.chain,
         unsignedUserOp: prepared.unsignedUserOp,
         entryPointAddress: prepared.entryPointAddress,
         entryPointVersion: prepared.entryPointVersion,
-        createdAt: Date.now(),
       });
       uninstallUserOpHash = prepared.userOpHash;
     }
@@ -454,14 +435,14 @@ export class WalletService {
 
     // Step 1: If uninstall is needed, submit it first and wait
     if (dto.uninstallRequestId && dto.uninstallSignature) {
-      const pending = this.pendingUserOps.get(dto.uninstallRequestId);
+      const pending = this.cache.get(dto.uninstallRequestId);
       if (!pending) {
         throw new NotFoundException('Uninstall UserOp not found or expired');
       }
       if (pending.userId !== userId) {
         throw new BadRequestException('UserOp belongs to a different user');
       }
-      this.pendingUserOps.delete(dto.uninstallRequestId);
+      this.cache.remove(dto.uninstallRequestId);
 
       const uninstallTxHash = await this.userOpService.submitUserOp(
         pending.chain,
@@ -538,12 +519,11 @@ export class WalletService {
         dto.chain, user.credentialId, user.publicKey, uninstallCalls,
       );
       uninstallRequestId = crypto.randomUUID();
-      this.pendingUserOps.set(uninstallRequestId, {
+      this.cache.store(uninstallRequestId, {
         userId, chain: dto.chain,
         unsignedUserOp: prepared.unsignedUserOp,
         entryPointAddress: prepared.entryPointAddress,
         entryPointVersion: prepared.entryPointVersion,
-        createdAt: Date.now(),
       });
       uninstallUserOpHash = prepared.userOpHash;
     }
@@ -585,10 +565,10 @@ export class WalletService {
 
     // Step 1: Uninstall if needed
     if (dto.uninstallRequestId && dto.uninstallSignature) {
-      const pending = this.pendingUserOps.get(dto.uninstallRequestId);
+      const pending = this.cache.get(dto.uninstallRequestId);
       if (!pending) throw new NotFoundException('Uninstall UserOp not found or expired');
       if (pending.userId !== userId) throw new BadRequestException('UserOp belongs to a different user');
-      this.pendingUserOps.delete(dto.uninstallRequestId);
+      this.cache.remove(dto.uninstallRequestId);
 
       const uninstallTxHash = await this.userOpService.submitUserOp(
         pending.chain,
