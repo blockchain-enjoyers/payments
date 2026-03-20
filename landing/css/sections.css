@@ -412,7 +412,6 @@
   font-weight: 700;
   line-height: 1.3;
   color: #ff6b6b;
-  text-shadow: 0 0 12px rgba(255, 107, 107, 0.3), 0 0 24px rgba(255, 107, 107, 0.12);
 }
 
 .problem-wall__light {
@@ -437,8 +436,6 @@
 }
 
 .problem-wall__slide:not(.problem-wall__slide--resolve) .problem-wall__card {
-  filter: drop-shadow(0 0 30px rgba(255, 107, 107, 0.3))
-          drop-shadow(0 0 60px rgba(255, 107, 107, 0.12));
 }
 
 .problem-wall__slide--resolve .problem-wall__card {
@@ -475,7 +472,6 @@
 .problem-wall__dot.active {
   background: #ff6b6b;
   transform: scale(1.4);
-  box-shadow: 0 0 8px rgba(255, 107, 107, 0.5);
 }
 
 .problem-wall__dot.active--resolve {

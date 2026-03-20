@@ -35,6 +35,7 @@
   let paused = false;
   let animId = null;
   let bgColor = "#0B0D12";
+  let lastTime = 0;
 
   // ── Simplex Noise ──
   const SimplexNoise = (() => {
@@ -125,7 +126,7 @@
       this.lineWidth = 1 + Math.random();
     }
 
-    update() {
+    update(dt) {
       this.prevX = this.x;
       this.prevY = this.y;
 
@@ -152,8 +153,8 @@
         vy = vy * (1 - blend) + perpY * this.speed * 2 * blend;
       }
 
-      this.x += vx;
-      this.y += vy;
+      this.x += vx * dt;
+      this.y += vy * dt;
 
       // Off-screen → restart from home
       if (this.x > W || this.x < 0 || this.y > H || this.y < 0) {
@@ -164,8 +165,7 @@
         this.trail = [];
       }
 
-      this.trail.push({ x: this.x, y: this.y });
-      if (this.trail.length > TRAIL_LENGTH) this.trail.shift();
+      // Trail push handled in animate() with throttling
     }
 
     draw() {
@@ -197,18 +197,26 @@
     }
   }
 
-  function animate() {
+  function animate(timestamp) {
     if (paused) {
+      lastTime = 0;
       animId = requestAnimationFrame(animate);
       return;
     }
+
+    if (!lastTime) lastTime = timestamp;
+    const elapsed = timestamp - lastTime;
+    lastTime = timestamp;
+    const dt = Math.min(elapsed / 8.333, 3.0); // normalize to 120fps, clamp
 
     ctx.fillStyle = bgColor;
     ctx.fillRect(0, 0, W, H);
 
     time++;
     for (let i = 0; i < PARTICLE_COUNT; i++) {
-      particles[i].update();
+      particles[i].update(dt);
+      particles[i].trail.push({ x: particles[i].x, y: particles[i].y });
+      if (particles[i].trail.length > TRAIL_LENGTH) particles[i].trail.shift();
       particles[i].draw();
     }
 
@@ -243,5 +251,5 @@
   });
 
   init();
-  animate();
+  requestAnimationFrame(animate);
 })();
