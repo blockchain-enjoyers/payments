@@ -1,28 +1,15 @@
 {
-  "name": "arcflow-payout",
+  "name": "omniflow-dashboard",
   "version": "1.0.0",
-  "description": "Multi-chain USDC collection via Circle Gateway + AA Wallet",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "private": true,
+  "engines": {
+    "node": ">=18"
+  },
   "scripts": {
-    "build": "tsc",
-    "collect": "ts-node src/scripts/collect.ts",
-    "collect:aa": "ts-node scripts/collect-aa.ts",
-    "send-native": "ts-node scripts/sendNative.ts",
-    "send-native:base": "ts-node scripts/sendNative.ts base",
-    "send-native:sonic": "ts-node scripts/sendNative.ts sonic",
-    "serve": "npx serve public"
+    "build": "echo 'No build step'",
+    "start": "npx serve . -l $PORT -s"
   },
   "dependencies": {
-    "@circle-fin/modular-wallets-core": "^1.0.13",
-    "dotenv": "^16.4.5",
-    "ethers": "^6.13.4",
-    "viem": "^2.0.0"
-  },
-  "devDependencies": {
-    "@types/node": "^22.10.0",
-    "serve": "^14.2.0",
-    "ts-node": "^10.9.2",
-    "typescript": "^5.7.2"
+    "serve": "^14.2.0"
   }
 }
