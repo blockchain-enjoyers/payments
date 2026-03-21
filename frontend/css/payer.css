@@ -1,0 +1,392 @@
+    /* ============================================
+       PAYER PREVIEW MODAL
+       ============================================ */
+    .payer-modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 1000;
+      background: rgba(28, 19, 44, 0.4);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      animation: fadeIn 0.2s ease;
+    }
+
+    .payer-modal-overlay.active { display: flex; }
+
+    .payer-modal {
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      border-radius: 24px;
+      border: 1px solid rgba(255, 255, 255, 0.6);
+      box-shadow: 0 24px 80px rgba(0, 0, 0, 0.12);
+      padding: 32px;
+      width: 100%;
+      max-width: 420px;
+      animation: slideUp 0.25s ease;
+      text-align: center;
+    }
+
+    .payer-modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+      font-size: 16px;
+      font-weight: 700;
+      color: #1c132c;
+    }
+
+    .payer-modal-header button {
+      background: none;
+      border: none;
+      font-size: 20px;
+      cursor: pointer;
+      color: #9ca3af;
+      padding: 4px 8px;
+      border-radius: 8px;
+      transition: background 0.15s;
+    }
+
+    .payer-modal-header button:hover { background: rgba(0, 0, 0, 0.05); }
+
+    .payer-modal-badge {
+      display: inline-block;
+      padding: 4px 14px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      background: rgba(251, 191, 36, 0.12);
+      color: #d97706;
+      margin-bottom: 20px;
+    }
+
+    .payer-modal-amount {
+      font-size: 36px;
+      font-weight: 800;
+      color: #1c132c;
+      letter-spacing: -1px;
+      margin-bottom: 8px;
+    }
+
+    .payer-modal-desc {
+      font-size: 14px;
+      color: #6b7280;
+      margin-bottom: 20px;
+    }
+
+    .payer-modal-details {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 16px;
+      background: rgba(0, 0, 0, 0.03);
+      border-radius: 12px;
+      font-size: 14px;
+      font-weight: 500;
+      color: #374151;
+      margin-bottom: 20px;
+    }
+
+    .payer-modal-details img {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+    }
+
+    .payer-modal-divider {
+      height: 1px;
+      background: rgba(0, 0, 0, 0.06);
+      margin-bottom: 20px;
+    }
+
+    .payer-modal-wallet {
+      display: block;
+      width: 100%;
+      padding: 16px;
+      border-radius: 14px;
+      background: linear-gradient(135deg, #1894E8, #9F72FF);
+      color: #fff;
+      font-size: 15px;
+      font-weight: 700;
+      font-family: 'JetBrains Mono', monospace;
+      border: none;
+      cursor: pointer;
+      transition: box-shadow 0.2s, transform 0.2s;
+      margin-bottom: 16px;
+    }
+
+    .payer-modal-wallet:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 20px rgba(24, 148, 232, 0.35);
+    }
+
+    .payer-modal-wallet:active { transform: translateY(0); }
+
+    .payer-modal-footer {
+      font-size: 12px;
+      color: #9ca3af;
+      font-weight: 500;
+    }
+
+    .payer-token-selector {
+      margin-bottom: 20px;
+      text-align: left;
+    }
+
+    .payer-token-label {
+      font-size: 12px;
+      font-weight: 600;
+      color: #6b7280;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 10px;
+    }
+
+    .payer-token-chips {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .payer-token-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 14px;
+      border-radius: 20px;
+      background: rgba(243, 244, 246, 0.8);
+      font-size: 13px;
+      font-weight: 600;
+      font-family: 'JetBrains Mono', monospace;
+      color: #1c132c;
+      border: 1.5px solid transparent;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .payer-token-chip:hover {
+      background: rgba(230, 232, 240, 0.9);
+    }
+
+    .payer-token-chip.active {
+      border-color: #9F72FF;
+      background: rgba(159, 114, 255, 0.08);
+    }
+
+    .payer-token-chip img {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+    }
+
+    /* Payer step containers */
+    .payer-step-1, .payer-step-2, .payer-step-3 { display: none; }
+    .payer-step-1.active { display: block; }
+    .payer-step-2.active { display: block; }
+    .payer-step-3.active { display: block; }
+
+    .payer-wallet-connected {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 14px;
+      border-radius: 20px;
+      background: rgba(16, 185, 129, 0.08);
+      border: 1.5px solid rgba(16, 185, 129, 0.3);
+      font-size: 13px;
+      font-weight: 600;
+      font-family: 'JetBrains Mono', monospace;
+      color: #065f46;
+      margin-bottom: 20px;
+    }
+
+    .payer-wallet-connected .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #10b981;
+    }
+
+    .payer-chain-selector {
+      margin-bottom: 20px;
+      text-align: left;
+    }
+
+    .payer-chain-label {
+      font-size: 12px;
+      font-weight: 600;
+      color: #6b7280;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 10px;
+    }
+
+    .payer-chain-chips {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .payer-chain-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 14px;
+      border-radius: 20px;
+      background: rgba(243, 244, 246, 0.8);
+      font-size: 13px;
+      font-weight: 600;
+      font-family: 'JetBrains Mono', monospace;
+      color: #1c132c;
+      border: 1.5px solid transparent;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .payer-chain-chip:hover {
+      background: rgba(230, 232, 240, 0.9);
+    }
+
+    .payer-chain-chip.active {
+      border-color: #9F72FF;
+      background: rgba(159, 114, 255, 0.08);
+    }
+
+    .payer-chain-chip img {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+    }
+
+    .payer-conversion-info {
+      font-size: 13px;
+      color: #6b7280;
+      margin-bottom: 20px;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .payer-pay-btn {
+      display: block;
+      width: 100%;
+      padding: 16px;
+      border-radius: 14px;
+      background: linear-gradient(135deg, #10b981, #059669);
+      color: #fff;
+      font-size: 15px;
+      font-weight: 700;
+      font-family: 'JetBrains Mono', monospace;
+      border: none;
+      cursor: pointer;
+      transition: box-shadow 0.2s, transform 0.2s;
+      margin-bottom: 16px;
+    }
+
+    .payer-pay-btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 20px rgba(16, 185, 129, 0.35);
+    }
+
+    .payer-pay-btn:active { transform: translateY(0); }
+
+    .payer-success-icon {
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #10b981, #059669);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 20px;
+      animation: scaleIn 0.35s ease;
+    }
+
+    .payer-success-icon svg {
+      width: 32px;
+      height: 32px;
+      stroke: #fff;
+      stroke-width: 2.5;
+      fill: none;
+    }
+
+    @keyframes scaleIn {
+      0% { transform: scale(0); opacity: 0; }
+      60% { transform: scale(1.15); }
+      100% { transform: scale(1); opacity: 1; }
+    }
+
+    .payer-success-label {
+      font-size: 18px;
+      font-weight: 700;
+      color: #065f46;
+      margin-bottom: 4px;
+    }
+
+    .payer-success-sublabel {
+      font-size: 13px;
+      color: #6b7280;
+      margin-bottom: 24px;
+    }
+
+    .payer-success-details {
+      background: rgba(0, 0, 0, 0.03);
+      border-radius: 14px;
+      padding: 16px;
+      margin-bottom: 20px;
+      text-align: left;
+    }
+
+    .payer-success-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 13px;
+      color: #374151;
+      padding: 6px 0;
+    }
+
+    .payer-success-row + .payer-success-row {
+      border-top: 1px solid rgba(0, 0, 0, 0.05);
+    }
+
+    .payer-success-row-label {
+      color: #6b7280;
+      font-weight: 500;
+    }
+
+    .payer-success-row-value {
+      font-weight: 600;
+      font-family: 'JetBrains Mono', monospace;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .payer-success-row-value img {
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+    }
+
+    .payer-success-done {
+      display: block;
+      width: 100%;
+      padding: 14px;
+      border-radius: 14px;
+      background: rgba(0, 0, 0, 0.04);
+      color: #374151;
+      font-size: 14px;
+      font-weight: 600;
+      font-family: 'JetBrains Mono', monospace;
+      border: none;
+      cursor: pointer;
+      transition: background 0.15s;
+      margin-bottom: 16px;
+    }
+
+    .payer-success-done:hover { background: rgba(0, 0, 0, 0.08); }
+

@@ -1,0 +1,81 @@
+    /* ============================================
+       RESPONSIVE
+       ============================================ */
+    @media (max-width: 640px) {
+      .topnav { padding: 12px 16px; }
+      .topnav-left { gap: 16px; }
+      .nav-links { display: none; }
+      .main { padding: 24px 16px; }
+      .nav-balance { font-size: 13px; }
+      .cards { grid-template-columns: 1fr; }
+      .card { padding: 24px; }
+      .modal-card { padding: 36px 24px; }
+      .activity-row { padding: 14px 16px; gap: 10px; }
+      .activity-desc .mono { font-size: 12px; }
+      .dashboard-card { padding: 28px 20px; }
+      .balance-amount { font-size: 24px; }
+      .chain-chips { gap: 6px; }
+      .chain-chip { padding: 5px 10px; font-size: 12px; }
+      .topup-card, .success-card { padding: 28px 20px; }
+      .invoice-card, .payin-result-card { padding: 28px 20px; }
+      .form-row { flex-direction: column; }
+      .result-preview { flex-direction: column; text-align: center; }
+      .result-amount-block { text-align: center; }
+      .result-token { justify-content: center; }
+      .link-actions { flex-direction: column; width: 100%; }
+      .btn-copy, .btn-share, .btn-preview { width: 100%; flex: unset; justify-content: center; }
+
+      .payer-modal { padding: 24px 20px; }
+      .payer-modal-amount { font-size: 28px; }
+
+      /* Payout responsive */
+      .payout-card, .result-card { padding: 28px 20px; }
+
+      .recipient-row {
+        flex-wrap: wrap;
+        padding: 8px 0;
+      }
+
+      .recipient-num { width: 28px; }
+
+      .recipient-address {
+        flex: unset;
+        width: calc(100% - 64px);
+      }
+
+      .recipient-amount { width: 70px; }
+
+      .mini-dropdown-wrapper.token-dd { width: 72px; }
+      .mini-dropdown-wrapper.chain-dd { width: 96px; }
+      .mini-select { padding: 6px 6px; font-size: 11px; }
+
+      .review-header { display: none; }
+
+      .review-row {
+        flex-wrap: wrap;
+        gap: 4px;
+        padding: 12px 12px;
+      }
+
+      .review-row .col-num { width: 24px; }
+      .review-row .col-amount { width: auto; }
+      .review-row .col-delivery { width: 100%; justify-content: flex-start; padding-left: 24px; margin-top: 2px; }
+
+      .result-row {
+        flex-wrap: wrap;
+        gap: 6px;
+      }
+
+      .result-actions { flex-direction: column; }
+      .btn-receipt, .btn-share-result { width: 100%; flex: unset; }
+
+      /* History responsive */
+      .history-card { padding: 24px 16px; }
+      .history-tabs { gap: 0; overflow-x: auto; }
+      .history-tab { padding: 8px 12px; font-size: 12px; white-space: nowrap; }
+      .history-filter-row { flex-wrap: wrap; }
+      .history-tx-row { gap: 10px; }
+      .history-tx-desc .mono { font-size: 12px; }
+      .history-pagination { flex-direction: column; gap: 12px; align-items: center; }
+    }
+
