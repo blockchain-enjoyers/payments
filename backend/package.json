@@ -1,7 +1,7 @@
 {
   "name": "omniflow-backend",
   "version": "1.0.0",
-  "description": "OmniFlow API - Stripe-like API for cross-chain crypto payments",
+  "description": "OmniFlow API - Receiver-first cross-chain payment infrastructure",
   "author": "OmniFlow Team",
   "private": true,
   "license": "MIT",
